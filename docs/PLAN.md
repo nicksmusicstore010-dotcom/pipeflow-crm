@@ -44,17 +44,21 @@ Branch: `feat/m1-fundacao` · commit inicial `826bc99`
 - [ ] Teste manual com Supabase real
 
 **Pronto quando:** cadastro → confirmação por e-mail → login → dashboard → sair funciona num projeto Supabase real.
-**Pendente:** esse teste com Supabase real ainda não foi feito. O Supabase é provisionado pela Vercel (Marketplace), e as variáveis vêm de lá:
-1. Na Vercel: criar o projeto `pipeflow-crm` e, em Storage (ou Marketplace) > Supabase, criar o banco conectado a esse projeto.
-2. Local: `npm i -g vercel`, `vercel login`, `vercel link` (escolher `pipeflow-crm`) e `vercel env pull .env.local`. O `env.ts` aceita `NEXT_PUBLIC_SUPABASE_ANON_KEY`, que é o nome que a integração usa.
-3. No painel do Supabase (link no Storage da Vercel), em Authentication > URL Configuration, adicionar `http://localhost:3000/auth/callback` às Redirect URLs.
-4. Rodar `npm run dev` e percorrer o fluxo; se passar, marcar o milestone como ✅.
+**Infra:**
+- [x] Repositório no GitHub: `nicksmusicstore010-dotcom/pipeflow-crm` (privado)
+- [x] Deploy na Vercel importando o repo; `vercel.json` fixa o framework `nextjs`
+- [x] Projeto Supabase `qjwxtnacgoununcbsbjx`; `.env.local` preenchido; Auth respondendo e app conectando localmente
+
+**Pendente:** o teste manual do fluxo ainda não foi feito. Para fazê-lo:
+1. Supabase > Authentication > URL Configuration: Site URL = URL de produção da Vercel; Redirect URLs = `http://localhost:3000/auth/callback` e `https://<url-da-vercel>/auth/callback`.
+2. Vercel > Settings > Environment Variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` e `NEXT_PUBLIC_SITE_URL` (URL de produção); depois fazer um Redeploy.
+3. Rodar `npm run dev` e percorrer o fluxo; se passar, marcar o milestone como ✅.
 
 ---
 
 ## 2. Workspaces (multiempresa) ⬜
 
-- [ ] Configurar Supabase CLI e a pasta `supabase/migrations/`
+- [ ] Configurar Supabase CLI e a pasta `supabase/migrations/` (CLI instalada como devDependency e `supabase init` feito; falta `npx supabase login` e `npx supabase link --project-ref qjwxtnacgoununcbsbjx`)
 - [ ] Migration: `profiles` (trigger a partir de `auth.users`), `workspaces`, `workspace_members` (role `admin` | `member`)
 - [ ] RLS em todas as tabelas + função auxiliar `is_workspace_member(workspace_id)` / `is_workspace_admin(workspace_id)`
 - [ ] Gerar tipos em `src/types/database.ts`
