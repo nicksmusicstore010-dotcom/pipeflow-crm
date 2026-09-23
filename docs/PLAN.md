@@ -6,7 +6,7 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 
 | # | Milestone | Status |
 | --- | --- | --- |
-| 1 | Fundação | ✅ |
+| 1 | Fundação | 🚧 (falta teste com Supabase real) |
 | 2 | Workspaces (multiempresa) | ⬜ |
 | 3 | Leads | ⬜ |
 | 4 | Pipeline Kanban | ⬜ |
@@ -21,8 +21,11 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 
 ---
 
-## 1. Fundação ✅
+## 1. Fundação 🚧
 
+Branch: `feat/m1-fundacao` · commit inicial `826bc99`
+
+- [x] Repositório git + branch `feat/m1-fundacao`; `.gitignore` cobrindo `node_modules`, `.next`, `.env*.local`
 - [x] Next.js 14 (App Router, `src/`, alias `@/*`) + TypeScript + Tailwind 3
 - [x] shadcn/ui (button, input, label, card, dropdown-menu, avatar, badge, dialog, sonner, separator, sheet)
 - [x] Tokens de cor (slate + índigo, cores de gráfico) em `globals.css`; fonte Inter; `lang="pt-BR"`
@@ -34,8 +37,17 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 - [x] Páginas provisórias: Dashboard, Leads, Pipeline, Configurações
 - [x] Landing provisória em `/`, `.env.example`, README
 
+**Verificação (23/09/2026):**
+- [x] `npm install` em dia
+- [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
+- [x] Smoke test das rotas (`next dev` com env fictícia): `/`, `/login`, `/signup` → 200; `/dashboard`, `/leads?x=1`, `/settings` → 307 para `/login?next=...` preservando a query string
+- [ ] Teste manual com Supabase real
+
 **Pronto quando:** cadastro → confirmação por e-mail → login → dashboard → sair funciona num projeto Supabase real.
-**Pendente:** esse teste com Supabase real ainda não foi feito (falta preencher `.env.local`).
+**Pendente:** esse teste com Supabase real ainda não foi feito. Para fazê-lo:
+1. Copiar `.env.example` para `.env.local` e preencher `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+2. No Supabase, em Authentication > URL Configuration, adicionar `http://localhost:3000/auth/callback` às Redirect URLs.
+3. Rodar `npm run dev` e percorrer o fluxo; se passar, marcar o milestone como ✅.
 
 ---
 
