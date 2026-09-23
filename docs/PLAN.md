@@ -44,10 +44,11 @@ Branch: `feat/m1-fundacao` · commit inicial `826bc99`
 - [ ] Teste manual com Supabase real
 
 **Pronto quando:** cadastro → confirmação por e-mail → login → dashboard → sair funciona num projeto Supabase real.
-**Pendente:** esse teste com Supabase real ainda não foi feito. Para fazê-lo:
-1. Copiar `.env.example` para `.env.local` e preencher `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
-2. No Supabase, em Authentication > URL Configuration, adicionar `http://localhost:3000/auth/callback` às Redirect URLs.
-3. Rodar `npm run dev` e percorrer o fluxo; se passar, marcar o milestone como ✅.
+**Pendente:** esse teste com Supabase real ainda não foi feito. O Supabase é provisionado pela Vercel (Marketplace), e as variáveis vêm de lá:
+1. Na Vercel: criar o projeto `pipeflow-crm` e, em Storage (ou Marketplace) > Supabase, criar o banco conectado a esse projeto.
+2. Local: `npm i -g vercel`, `vercel login`, `vercel link` (escolher `pipeflow-crm`) e `vercel env pull .env.local`. O `env.ts` aceita `NEXT_PUBLIC_SUPABASE_ANON_KEY`, que é o nome que a integração usa.
+3. No painel do Supabase (link no Storage da Vercel), em Authentication > URL Configuration, adicionar `http://localhost:3000/auth/callback` às Redirect URLs.
+4. Rodar `npm run dev` e percorrer o fluxo; se passar, marcar o milestone como ✅.
 
 ---
 
