@@ -6,7 +6,7 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 
 | # | Milestone | Status |
 | --- | --- | --- |
-| 1 | Fundação | 🚧 (falta teste com Supabase real) |
+| 1 | Fundação | ✅ |
 | 2 | Workspaces (multiempresa) | ⬜ |
 | 3 | Leads | ⬜ |
 | 4 | Pipeline Kanban | ⬜ |
@@ -21,7 +21,7 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 
 ---
 
-## 1. Fundação 🚧
+## 1. Fundação ✅
 
 Branch: `feat/m1-fundacao` · commit inicial `826bc99`
 
@@ -41,18 +41,15 @@ Branch: `feat/m1-fundacao` · commit inicial `826bc99`
 - [x] `npm install` em dia
 - [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
 - [x] Smoke test das rotas (`next dev` com env fictícia): `/`, `/login`, `/signup` → 200; `/dashboard`, `/leads?x=1`, `/settings` → 307 para `/login?next=...` preservando a query string
-- [ ] Teste manual com Supabase real
+- [x] Teste manual com Supabase real (local e produção na Vercel), confirmado pelo usuário
 
-**Pronto quando:** cadastro → confirmação por e-mail → login → dashboard → sair funciona num projeto Supabase real.
+**Pronto quando:** cadastro → confirmação por e-mail → login → dashboard → sair funciona num projeto Supabase real. ✅
+
 **Infra:**
 - [x] Repositório no GitHub: `nicksmusicstore010-dotcom/pipeflow-crm` (privado)
-- [x] Deploy na Vercel importando o repo; `vercel.json` fixa o framework `nextjs`
-- [x] Projeto Supabase `qjwxtnacgoununcbsbjx`; `.env.local` preenchido; Auth respondendo e app conectando localmente
-
-**Pendente:** o teste manual do fluxo ainda não foi feito. Para fazê-lo:
-1. Supabase > Authentication > URL Configuration: Site URL = URL de produção da Vercel; Redirect URLs = `http://localhost:3000/auth/callback` e `https://<url-da-vercel>/auth/callback`.
-2. Vercel > Settings > Environment Variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` e `NEXT_PUBLIC_SITE_URL` (URL de produção); depois fazer um Redeploy.
-3. Rodar `npm run dev` e percorrer o fluxo; se passar, marcar o milestone como ✅.
+- [x] Deploy na Vercel importando o repo; `vercel.json` fixa o framework `nextjs`; env vars do Supabase configuradas
+- [x] Projeto Supabase `qjwxtnacgoununcbsbjx`; `.env.local` preenchido; Redirect URLs (local + Vercel) configuradas
+- [x] Integração Supabase ↔ GitHub (diretório de trabalho `.`)
 
 ---
 
