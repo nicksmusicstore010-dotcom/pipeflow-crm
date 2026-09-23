@@ -7,7 +7,7 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 | # | Milestone | Status |
 | --- | --- | --- |
 | 1 | Fundação | ✅ |
-| 2 | Workspaces (multiempresa) | ⬜ |
+| 2 | Workspaces (multiempresa) | 🚧 (falta teste manual) |
 | 3 | Leads | ⬜ |
 | 4 | Pipeline Kanban | ⬜ |
 | 5 | Atividades | ⬜ |
@@ -53,16 +53,24 @@ Branch: `feat/m1-fundacao` · commit inicial `826bc99`
 
 ---
 
-## 2. Workspaces (multiempresa) ⬜
+## 2. Workspaces (multiempresa) 🚧
 
-- [ ] Configurar Supabase CLI e a pasta `supabase/migrations/` (CLI instalada como devDependency e `supabase init` feito; falta `npx supabase login` e `npx supabase link --project-ref qjwxtnacgoununcbsbjx`)
-- [ ] Migration: `profiles` (trigger a partir de `auth.users`), `workspaces`, `workspace_members` (role `admin` | `member`)
-- [ ] RLS em todas as tabelas + função auxiliar `is_workspace_member(workspace_id)` / `is_workspace_admin(workspace_id)`
-- [ ] Gerar tipos em `src/types/database.ts`
-- [ ] Onboarding: após o primeiro login sem workspace, `/onboarding` pede o nome e cria o workspace (criador vira admin)
-- [ ] Mover as rotas logadas para `/[workspaceSlug]/...` e validar o acesso ao slug no layout
-- [ ] Workspace switcher na sidebar (dropdown com os workspaces do usuário + "Criar workspace")
-- [ ] Lembrar o último workspace acessado para redirecionar após o login
+Branch: `feat/m2-workspaces`
+
+- [x] Configurar Supabase CLI e a pasta `supabase/migrations/` (devDependency, `init` e `link` ao projeto `qjwxtnacgoununcbsbjx`)
+- [x] Migration `20260923203201_workspaces.sql`: `profiles` (trigger a partir de `auth.users` + backfill), `workspaces`, `workspace_members` (role `admin` | `member`), aplicada no remoto
+- [x] RLS em todas as tabelas + `is_workspace_member()` / `is_workspace_admin()` / `shares_workspace_with()`; RPC `create_workspace()` (única forma de criar; criador vira admin); `plan`/`stripe_*` sem permissão de update para clientes
+- [x] Gerar tipos em `src/types/database.ts`; clientes Supabase tipados com `Database`
+- [x] Onboarding: `/app` manda quem não tem workspace para `/onboarding`, que pede o nome e cria o workspace (Server Action + Zod)
+- [x] Mover as rotas logadas para `/[workspaceSlug]/...` e validar o acesso ao slug no layout (slug alheio → 404)
+- [x] Workspace switcher na sidebar e no menu mobile (dropdown com os workspaces do usuário + "Criar workspace")
+- [x] Lembrar o último workspace acessado (cookie `pf_last_workspace` gravado pelo middleware; `/app` só o usa se o usuário for membro)
+
+**Verificação (23/09/2026):**
+- [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
+- [x] Migration + testes de RLS em transação com rollback antes do `db push` (criação, slug duplicado, B isolado, anon bloqueado, `plan` imutável)
+- [x] Ponta a ponta com 2 usuários de teste (apagados depois): A cria workspaces pelo formulário real do onboarding (slug `acai-cia-vendas` a partir de "Açaí & Cia Vendas"; nome reservado "Login" → `login-xxxx`), dashboard renderiza com switcher e nav prefixada, `/app` volta ao último workspace e ignora cookie forjado; B recebe 404 nos slugs de A e `[]` consultando a API REST direto; update de `plan`, insert direto em `workspaces`/`workspace_members` e acesso anônimo → `permission denied`
+- [ ] Teste manual no navegador (criar 2 workspaces, alternar pelo switcher, sair e entrar de novo)
 
 **Pronto quando:** um usuário cria dois workspaces e alterna entre eles; um segundo usuário não consegue ler nada de workspaces dos quais não é membro, nem acessando pelo slug nem consultando o banco direto.
 

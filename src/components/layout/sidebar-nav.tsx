@@ -7,18 +7,25 @@ import { LayoutDashboard, Settings, SquareKanban, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/leads", label: "Leads", icon: Users },
-  { href: "/pipeline", label: "Pipeline", icon: SquareKanban },
-  { href: "/settings", label: "Configurações", icon: Settings },
+  { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/leads", label: "Leads", icon: Users },
+  { path: "/pipeline", label: "Pipeline", icon: SquareKanban },
+  { path: "/settings", label: "Configurações", icon: Settings },
 ];
 
-export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+export function SidebarNav({
+  workspaceSlug,
+  onNavigate,
+}: {
+  workspaceSlug: string;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
 
   return (
     <nav className="flex flex-col gap-1">
-      {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+      {NAV_ITEMS.map(({ path, label, icon: Icon }) => {
+        const href = `/${workspaceSlug}${path}`;
         const active = pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link

@@ -25,7 +25,8 @@ npm run dev          # servidor local
 npm run build        # build de produção
 npm run lint         # ESLint
 npx tsc --noEmit     # checagem de tipos
-npx supabase gen types typescript --local > src/types/database.ts   # regenerar tipos do banco
+npx supabase db push                                                   # aplicar migrations no projeto linkado
+npx supabase gen types typescript --linked > src/types/database.ts  # regenerar tipos do banco
 ```
 
 ## Estrutura de pastas

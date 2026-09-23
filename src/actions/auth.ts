@@ -79,7 +79,7 @@ export async function signup(_prev: AuthFormState, formData: FormData): Promise<
     return { success: "Conta criada! Enviamos um link de confirmação para o seu e-mail." };
   }
 
-  redirect("/dashboard");
+  redirect("/app");
 }
 
 export async function logout() {
