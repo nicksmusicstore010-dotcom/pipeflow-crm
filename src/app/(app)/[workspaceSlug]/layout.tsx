@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { AppSidebar } from "@/components/layout/app-sidebar";
-import { MobileNav } from "@/components/layout/mobile-nav";
+import { AppTopbar } from "@/components/layout/app-topbar";
 import { getCurrentUser } from "@/lib/session";
 import { getUserWorkspaces } from "@/lib/workspaces";
 
@@ -28,9 +28,9 @@ export default async function WorkspaceLayout({
 
   return (
     <div className="flex min-h-screen bg-muted/40">
-      <AppSidebar user={sessionUser} workspaces={workspaces} currentWorkspace={currentWorkspace} />
+      <AppSidebar workspaces={workspaces} currentWorkspace={currentWorkspace} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <MobileNav user={sessionUser} workspaces={workspaces} currentWorkspace={currentWorkspace} />
+        <AppTopbar user={sessionUser} workspaces={workspaces} currentWorkspace={currentWorkspace} />
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>

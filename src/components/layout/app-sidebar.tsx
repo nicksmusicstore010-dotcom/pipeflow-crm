@@ -1,33 +1,17 @@
-import { Logo } from "@/components/layout/logo";
-import { SidebarNav } from "@/components/layout/sidebar-nav";
-import { UserMenu, type SessionUser } from "@/components/layout/user-menu";
-import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher";
+import { SidebarContent } from "@/components/layout/sidebar-content";
 import type { WorkspaceSummary } from "@/lib/workspaces";
 
-/** Desktop sidebar: logo, workspace switcher, navigation and user menu. */
+/** Fixed desktop sidebar (lg+). On smaller screens `MobileNav` shows the same content in a drawer. */
 export function AppSidebar({
-  user,
   workspaces,
   currentWorkspace,
 }: {
-  user: SessionUser;
   workspaces: WorkspaceSummary[];
   currentWorkspace: WorkspaceSummary;
 }) {
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
-      <div className="flex h-16 items-center px-5">
-        <Logo href={`/${currentWorkspace.slug}/dashboard`} />
-      </div>
-      <div className="px-3 pb-2">
-        <WorkspaceSwitcher workspaces={workspaces} current={currentWorkspace} />
-      </div>
-      <div className="flex-1 overflow-y-auto px-3 py-2">
-        <SidebarNav workspaceSlug={currentWorkspace.slug} />
-      </div>
-      <div className="border-t border-sidebar-border p-3">
-        <UserMenu user={user} />
-      </div>
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
+      <SidebarContent workspaces={workspaces} currentWorkspace={currentWorkspace} />
     </aside>
   );
 }

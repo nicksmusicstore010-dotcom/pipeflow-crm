@@ -36,6 +36,9 @@ Branch: `feat/m1-fundacao` · commit inicial `826bc99`
 - [x] Layout logado: sidebar no desktop, gaveta no mobile, menu do usuário
 - [x] Páginas provisórias: Dashboard, Leads, Pipeline, Configurações
 - [x] Landing provisória em `/`, `.env.example`, README
+- [x] Esqueleto visual (24/09/2026): barra superior fixa (hamburguer no mobile, breadcrumb workspace › página, tema, menu do usuário); conteúdo da sidebar compartilhado entre desktop e gaveta; **dark mode como padrão** com seletor Claro/Escuro/Sistema; `loading.tsx` com skeleton
+- [x] Componentes base: `StatCard`, `StageBadge`, `KanbanColumn` (Pipeline já mostra as 6 colunas vazias), `UserAvatar`, `EmptyState` com `className`; `src/lib/deal-stages.ts` (ordem, rótulos e cores das etapas); shadcn `table`, `select`, `textarea`, `skeleton`, `tooltip`
+- [x] Verificação do esqueleto no navegador (Playwright + Edge, usuário de teste temporário apagado depois): navegação pela sidebar e pela gaveta mobile, switcher, tema (padrão escuro, troca, persistência, "Sistema"), sem rolagem horizontal da página em 390px, sem erros no console. Corrigido: `tailwind.config.ts` não varria `src/lib/`, então as cores das etapas não eram geradas
 
 **Verificação (23/09/2026):**
 - [x] `npm install` em dia
@@ -93,7 +96,7 @@ Branch: `feat/m2-workspaces`
 ## 4. Pipeline Kanban ⬜
 
 - [ ] Migration: enum `deal_stage` e tabela `deals` (title, value_cents, lead_id, owner_id, due_date, stage, position) + RLS
-- [ ] Helpers `formatCurrency` (centavos → BRL) e `formatDate` em `src/lib/utils.ts`
+- [x] Helpers `formatCurrency` (centavos → BRL) e `formatDate` em `src/lib/utils.ts` (feito no esqueleto visual)
 - [ ] Board com 6 colunas (Novo Lead → Fechado Ganho/Perdido), com a cor de cada etapa
 - [ ] Card: título, valor, lead, responsável (avatar), prazo (âmbar se próximo, vermelho se vencido)
 - [ ] Drag-and-drop com @dnd-kit entre colunas e dentro da coluna
@@ -169,7 +172,7 @@ Branch: `feat/m2-workspaces`
 - [ ] Chaves de API por workspace (criar/revogar em Configurações, armazenadas com hash)
 - [ ] Endpoints `/api/v1` para leads e negócios (listar, criar, atualizar), autenticados por chave
 - [ ] Onboarding guiado: checklist (criar lead, criar negócio, convidar colaborador)
-- [ ] Toggle de modo escuro
+- [x] Toggle de modo escuro (feito no esqueleto visual)
 - [ ] Revisão de acessibilidade, estados vazios, carregamento e erros
 - [ ] Deploy na Vercel + Supabase em produção
 

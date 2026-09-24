@@ -1,9 +1,9 @@
 "use client";
 
-import { ChevronsUpDown, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 import { logout } from "@/actions/auth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/shared/user-avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,29 +18,20 @@ export type SessionUser = {
   email: string;
 };
 
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/);
-  return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
-}
-
+/** Avatar button in the top bar; opens name/e-mail and "Sair". */
 export function UserMenu({ user }: { user: SessionUser }) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-        <Avatar className="h-8 w-8">
-          <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">
-            {initials(user.name)}
-          </AvatarFallback>
-        </Avatar>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate font-medium">{user.name}</span>
-          <span className="block truncate text-xs text-muted-foreground">{user.email}</span>
-        </span>
-        <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+      <DropdownMenuTrigger
+        className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label="Menu do usuário"
+      >
+        <UserAvatar name={user.name} />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" side="top" className="w-56">
-        <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
-          {user.email}
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="font-normal">
+          <span className="block truncate text-sm font-medium">{user.name}</span>
+          <span className="block truncate text-xs text-muted-foreground">{user.email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <form action={logout}>
