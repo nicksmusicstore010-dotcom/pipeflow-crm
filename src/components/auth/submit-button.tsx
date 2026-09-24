@@ -5,11 +5,17 @@ import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 
-export function SubmitButton({ children }: { children: React.ReactNode }) {
+export function SubmitButton({
+  children,
+  variant,
+}: {
+  children: React.ReactNode;
+  variant?: React.ComponentProps<typeof Button>["variant"];
+}) {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" className="w-full" disabled={pending}>
+    <Button type="submit" variant={variant} className="w-full" disabled={pending}>
       {pending && <Loader2 className="animate-spin" />}
       {children}
     </Button>

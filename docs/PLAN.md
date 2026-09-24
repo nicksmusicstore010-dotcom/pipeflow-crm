@@ -7,7 +7,7 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 | # | Milestone | Status |
 | --- | --- | --- |
 | 1 | Fundação | ✅ |
-| 2 | Workspaces (multiempresa) | ⬜ |
+| 2 | Workspaces (multiempresa) | 🚧 (falta teste manual) |
 | 3 | Leads | ⬜ |
 | 4 | Pipeline Kanban | ⬜ |
 | 5 | Atividades | ⬜ |
@@ -36,12 +36,19 @@ Branch: `feat/m1-fundacao` · commit inicial `826bc99`
 - [x] Layout logado: sidebar no desktop, gaveta no mobile, menu do usuário
 - [x] Páginas provisórias: Dashboard, Leads, Pipeline, Configurações
 - [x] Landing provisória em `/`, `.env.example`, README
+- [x] Esqueleto visual (24/09/2026): barra superior fixa (hamburguer no mobile, breadcrumb workspace › página, tema, menu do usuário); conteúdo da sidebar compartilhado entre desktop e gaveta; **dark mode como padrão** com seletor Claro/Escuro/Sistema; `loading.tsx` com skeleton
+- [x] Componentes base: `StatCard`, `StageBadge`, `KanbanColumn` (Pipeline já mostra as 6 colunas vazias), `UserAvatar`, `EmptyState` com `className`; `src/lib/deal-stages.ts` (ordem, rótulos e cores das etapas); shadcn `table`, `select`, `textarea`, `skeleton`, `tooltip`
+- [x] Verificação do esqueleto no navegador (Playwright + Edge, usuário de teste temporário apagado depois): navegação pela sidebar e pela gaveta mobile, switcher, tema (padrão escuro, troca, persistência, "Sistema"), sem rolagem horizontal da página em 390px, sem erros no console. Corrigido: `tailwind.config.ts` não varria `src/lib/`, então as cores das etapas não eram geradas
 
 **Verificação (23/09/2026):**
 - [x] `npm install` em dia
 - [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
 - [x] Smoke test das rotas (`next dev` com env fictícia): `/`, `/login`, `/signup` → 200; `/dashboard`, `/leads?x=1`, `/settings` → 307 para `/login?next=...` preservando a query string
 - [x] Teste manual com Supabase real (local e produção na Vercel), confirmado pelo usuário
+
+- [x] Correção (24/09/2026): confirmação de e-mail falhava ("Link inválido") quando o link era aberto em outro navegador/dispositivo (PKCE). `/auth/callback` agora aceita `token_hash` (`verifyOtp`, funciona em qualquer navegador) além de `code`; mensagens distintas para link expirado/usado e "confirmado em outro navegador"; botão "Reenviar link de confirmação" no login. Testado com Playwright (usuários temporários, sem envio real de e-mail)
+- [ ] Dashboard do Supabase: template "Confirm signup" apontando para `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email`
+- [ ] SMTP próprio (Resend) no Supabase — o SMTP padrão é só para testes: poucos e-mails por hora e entrega lenta/incerta
 
 **Pronto quando:** cadastro → confirmação por e-mail → login → dashboard → sair funciona num projeto Supabase real. ✅
 
@@ -53,16 +60,24 @@ Branch: `feat/m1-fundacao` · commit inicial `826bc99`
 
 ---
 
-## 2. Workspaces (multiempresa) ⬜
+## 2. Workspaces (multiempresa) 🚧
 
-- [ ] Configurar Supabase CLI e a pasta `supabase/migrations/` (CLI instalada como devDependency e `supabase init` feito; falta `npx supabase login` e `npx supabase link --project-ref qjwxtnacgoununcbsbjx`)
-- [ ] Migration: `profiles` (trigger a partir de `auth.users`), `workspaces`, `workspace_members` (role `admin` | `member`)
-- [ ] RLS em todas as tabelas + função auxiliar `is_workspace_member(workspace_id)` / `is_workspace_admin(workspace_id)`
-- [ ] Gerar tipos em `src/types/database.ts`
-- [ ] Onboarding: após o primeiro login sem workspace, `/onboarding` pede o nome e cria o workspace (criador vira admin)
-- [ ] Mover as rotas logadas para `/[workspaceSlug]/...` e validar o acesso ao slug no layout
-- [ ] Workspace switcher na sidebar (dropdown com os workspaces do usuário + "Criar workspace")
-- [ ] Lembrar o último workspace acessado para redirecionar após o login
+Branch: `feat/m2-workspaces`
+
+- [x] Configurar Supabase CLI e a pasta `supabase/migrations/` (devDependency, `init` e `link` ao projeto `qjwxtnacgoununcbsbjx`)
+- [x] Migration `20260923203201_workspaces.sql`: `profiles` (trigger a partir de `auth.users` + backfill), `workspaces`, `workspace_members` (role `admin` | `member`), aplicada no remoto
+- [x] RLS em todas as tabelas + `is_workspace_member()` / `is_workspace_admin()` / `shares_workspace_with()`; RPC `create_workspace()` (única forma de criar; criador vira admin); `plan`/`stripe_*` sem permissão de update para clientes
+- [x] Gerar tipos em `src/types/database.ts`; clientes Supabase tipados com `Database`
+- [x] Onboarding: `/app` manda quem não tem workspace para `/onboarding`, que pede o nome e cria o workspace (Server Action + Zod)
+- [x] Mover as rotas logadas para `/[workspaceSlug]/...` e validar o acesso ao slug no layout (slug alheio → 404)
+- [x] Workspace switcher na sidebar e no menu mobile (dropdown com os workspaces do usuário + "Criar workspace")
+- [x] Lembrar o último workspace acessado (cookie `pf_last_workspace` gravado pelo middleware; `/app` só o usa se o usuário for membro)
+
+**Verificação (23/09/2026):**
+- [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
+- [x] Migration + testes de RLS em transação com rollback antes do `db push` (criação, slug duplicado, B isolado, anon bloqueado, `plan` imutável)
+- [x] Ponta a ponta com 2 usuários de teste (apagados depois): A cria workspaces pelo formulário real do onboarding (slug `acai-cia-vendas` a partir de "Açaí & Cia Vendas"; nome reservado "Login" → `login-xxxx`), dashboard renderiza com switcher e nav prefixada, `/app` volta ao último workspace e ignora cookie forjado; B recebe 404 nos slugs de A e `[]` consultando a API REST direto; update de `plan`, insert direto em `workspaces`/`workspace_members` e acesso anônimo → `permission denied`
+- [ ] Teste manual no navegador (criar 2 workspaces, alternar pelo switcher, sair e entrar de novo)
 
 **Pronto quando:** um usuário cria dois workspaces e alterna entre eles; um segundo usuário não consegue ler nada de workspaces dos quais não é membro, nem acessando pelo slug nem consultando o banco direto.
 
@@ -85,7 +100,7 @@ Branch: `feat/m1-fundacao` · commit inicial `826bc99`
 ## 4. Pipeline Kanban ⬜
 
 - [ ] Migration: enum `deal_stage` e tabela `deals` (title, value_cents, lead_id, owner_id, due_date, stage, position) + RLS
-- [ ] Helpers `formatCurrency` (centavos → BRL) e `formatDate` em `src/lib/utils.ts`
+- [x] Helpers `formatCurrency` (centavos → BRL) e `formatDate` em `src/lib/utils.ts` (feito no esqueleto visual)
 - [ ] Board com 6 colunas (Novo Lead → Fechado Ganho/Perdido), com a cor de cada etapa
 - [ ] Card: título, valor, lead, responsável (avatar), prazo (âmbar se próximo, vermelho se vencido)
 - [ ] Drag-and-drop com @dnd-kit entre colunas e dentro da coluna
@@ -161,7 +176,7 @@ Branch: `feat/m1-fundacao` · commit inicial `826bc99`
 - [ ] Chaves de API por workspace (criar/revogar em Configurações, armazenadas com hash)
 - [ ] Endpoints `/api/v1` para leads e negócios (listar, criar, atualizar), autenticados por chave
 - [ ] Onboarding guiado: checklist (criar lead, criar negócio, convidar colaborador)
-- [ ] Toggle de modo escuro
+- [x] Toggle de modo escuro (feito no esqueleto visual)
 - [ ] Revisão de acessibilidade, estados vazios, carregamento e erros
 - [ ] Deploy na Vercel + Supabase em produção
 

@@ -24,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
           {children}
           <Toaster richColors position="top-right" />
         </ThemeProvider>

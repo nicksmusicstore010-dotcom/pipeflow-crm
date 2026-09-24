@@ -25,7 +25,8 @@ npm run dev          # servidor local
 npm run build        # build de produção
 npm run lint         # ESLint
 npx tsc --noEmit     # checagem de tipos
-npx supabase gen types typescript --local > src/types/database.ts   # regenerar tipos do banco
+npx supabase db push                                                   # aplicar migrations no projeto linkado
+npx supabase gen types typescript --linked > src/types/database.ts  # regenerar tipos do banco
 ```
 
 ## Estrutura de pastas
@@ -48,13 +49,15 @@ src/
   components/
     ui/                     # componentes shadcn/ui (gerados, não editar à mão sem motivo)
     layout/                 # sidebar, header, workspace switcher
+    shared/                 # peças genéricas reutilizadas entre domínios (ex.: UserAvatar)
     leads/ pipeline/ activities/ dashboard/ billing/ marketing/
   lib/
     supabase/               # client.ts (browser), server.ts (RSC/actions), middleware.ts, admin.ts (service role)
     stripe.ts
     resend.ts
     plans.ts                # limites dos planos (fonte única da verdade)
-    utils.ts                # cn(), formatCurrency(), formatDate()
+    deal-stages.ts          # ordem, rótulos e cores das etapas do pipeline (fonte única)
+    utils.ts                # cn(), formatCurrency(), formatDate(), initials()
   actions/                  # Server Actions por domínio (leads.ts, deals.ts, activities.ts, workspaces.ts...)
   hooks/
   types/
@@ -117,7 +120,7 @@ Referências: **Pipedrive** (clareza do pipeline), **HubSpot** (organização de
 - **Tipografia:** Inter (via `next/font`); números de métricas e valores em `tabular-nums`.
 - **Layout do app:** sidebar fixa à esquerda (logo, workspace switcher, navegação: Dashboard, Leads, Pipeline, Configurações) + área de conteúdo com header da página.
 - **Componentes:** sempre partir do shadcn/ui; raio `rounded-lg`; sombras sutis (`shadow-sm`); ícones lucide.
-- **Suporte a dark mode** via tokens CSS do shadcn (classe `dark`).
+- **Dark mode é o tema padrão** (next-themes, classe `dark`), com seletor Claro/Escuro/Sistema na barra superior. Todo componente novo precisa funcionar nos dois temas — use os tokens (`bg-card`, `text-muted-foreground`...) e, para cores fixas, a variante `dark:`.
 - **Responsivo:** landing e telas de leitura funcionam no mobile; o Kanban rola horizontalmente em telas pequenas.
 - Estados vazios com ícone, frase curta e CTA (ex.: "Nenhum lead ainda — cadastre o primeiro").
 

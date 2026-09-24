@@ -6,6 +6,8 @@ const config: Config = {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    // Class names that live in data modules (e.g. deal-stages.ts colors).
+    "./src/lib/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
   	extend: {
