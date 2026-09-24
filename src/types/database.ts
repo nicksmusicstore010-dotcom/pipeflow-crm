@@ -39,6 +39,73 @@ export type Database = {
   }
   public: {
     Tables: {
+      leads: {
+        Row: {
+          company: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          name: string
+          owner_id: string | null
+          phone: string | null
+          position: string | null
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          owner_id?: string | null
+          phone?: string | null
+          position?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          owner_id?: string | null
+          phone?: string | null
+          position?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -160,6 +227,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      is_user_in_workspace: {
+        Args: { p_user_id: string; p_workspace_id: string }
+        Returns: boolean
+      }
       is_workspace_admin: { Args: { p_workspace_id: string }; Returns: boolean }
       is_workspace_member: {
         Args: { p_workspace_id: string }
@@ -168,6 +239,12 @@ export type Database = {
       shares_workspace_with: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
+      lead_status:
+        | "new"
+        | "contacted"
+        | "qualified"
+        | "unqualified"
+        | "customer"
       workspace_plan: "free" | "pro"
       workspace_role: "admin" | "member"
     }
@@ -300,6 +377,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      lead_status: ["new", "contacted", "qualified", "unqualified", "customer"],
       workspace_plan: ["free", "pro"],
       workspace_role: ["admin", "member"],
     },

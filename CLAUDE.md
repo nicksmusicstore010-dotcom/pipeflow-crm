@@ -57,6 +57,9 @@ src/
     resend.ts
     plans.ts                # limites dos planos (fonte única da verdade)
     deal-stages.ts          # ordem, rótulos e cores das etapas do pipeline (fonte única)
+    lead-status.ts          # status dos leads: ordem, rótulos e cores (fonte única)
+    leads.ts                # consultas de leads (listagem com filtros/paginação, detalhe)
+    validations/            # schemas Zod compartilhados entre formulário e Server Action
     utils.ts                # cn(), formatCurrency(), formatDate(), initials()
   actions/                  # Server Actions por domínio (leads.ts, deals.ts, activities.ts, workspaces.ts...)
   hooks/
