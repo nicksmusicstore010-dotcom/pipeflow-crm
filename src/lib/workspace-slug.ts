@@ -1,5 +1,9 @@
-/** Cookie with the slug of the last workspace the user opened (set by the middleware). */
-export const LAST_WORKSPACE_COOKIE = "pf_last_workspace";
+/**
+ * Cookie with the slug of the last workspace the user opened (set in the browser by
+ * RememberWorkspace). Not the old "pf_last_workspace": that one was httpOnly, and a
+ * script can't overwrite an httpOnly cookie with the same name.
+ */
+export const LAST_WORKSPACE_COOKIE = "pf_workspace";
 
 // Top-level paths that a workspace slug must never shadow.
 const RESERVED_SLUGS = new Set([

@@ -24,10 +24,15 @@ export function formatDate(value: string | Date) {
   return dateFormatter.format(typeof value === "string" ? new Date(value) : value)
 }
 
+/** First character of a string, emoji-safe ("🚀 Time" → "🚀", not half a surrogate pair). */
+export function firstChar(value: string) {
+  return Array.from(value.trim())[0] ?? ""
+}
+
 /** "Maria da Silva" → "MS"; "ana" → "A". */
 export function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean)
-  const first = parts[0]?.[0] ?? ""
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : ""
+  const first = firstChar(parts[0] ?? "")
+  const last = parts.length > 1 ? firstChar(parts[parts.length - 1]) : ""
   return (first + last).toUpperCase()
 }

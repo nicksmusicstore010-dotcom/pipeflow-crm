@@ -1,8 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { isWorkspaceSlug, LAST_WORKSPACE_COOKIE } from "@/lib/workspace-slug";
-
 import { getSupabaseEnv } from "./env";
 
 const PUBLIC_PATHS = ["/", "/pricing"];
@@ -63,23 +61,6 @@ export async function updateSession(request: NextRequest) {
     appUrl.pathname = AFTER_LOGIN_PATH;
     appUrl.search = "";
     return redirectWithCookies(appUrl, response);
-  }
-
-  // Remember the last workspace so /app can send the user back to it.
-  // Membership is checked where the cookie is read, not here.
-  const firstSegment = pathname.split("/")[1] ?? "";
-  if (
-    user &&
-    isWorkspaceSlug(firstSegment) &&
-    request.cookies.get(LAST_WORKSPACE_COOKIE)?.value !== firstSegment
-  ) {
-    response.cookies.set(LAST_WORKSPACE_COOKIE, firstSegment, {
-      path: "/",
-      maxAge: 60 * 60 * 24 * 365,
-      sameSite: "lax",
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-    });
   }
 
   return response;
