@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { firstChar } from "@/lib/utils";
 import type { WorkspaceSummary } from "@/lib/workspaces";
 
 export function WorkspaceSwitcher({
@@ -22,11 +23,14 @@ export function WorkspaceSwitcher({
   current: WorkspaceSummary;
   onNavigate?: () => void;
 }) {
+  // Names aren't unique; when two collide, show the slug so they can be told apart.
+  const isDuplicateName = (name: string) => workspaces.filter((w) => w.name === name).length > 1;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-lg border border-sidebar-border bg-card px-2 py-2 text-left text-sm shadow-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 font-semibold text-primary">
-          {current.name.charAt(0).toUpperCase()}
+          {firstChar(current.name).toUpperCase()}
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate font-medium">{current.name}</span>
@@ -42,8 +46,16 @@ export function WorkspaceSwitcher({
         </DropdownMenuLabel>
         {workspaces.map((workspace) => (
           <DropdownMenuItem key={workspace.id} asChild>
-            <Link href={`/${workspace.slug}/dashboard`} onClick={onNavigate}>
-              <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
+            {/* No prefetch: opening the menu would render every workspace's layout at once. */}
+            <Link href={`/${workspace.slug}/dashboard`} prefetch={false} onClick={onNavigate}>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate">{workspace.name}</span>
+                {isDuplicateName(workspace.name) && (
+                  <span className="block truncate text-xs text-muted-foreground">
+                    /{workspace.slug}
+                  </span>
+                )}
+              </span>
               {workspace.id === current.id && <Check className="text-primary" />}
             </Link>
           </DropdownMenuItem>

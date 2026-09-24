@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppTopbar } from "@/components/layout/app-topbar";
+import { RememberWorkspace } from "@/components/workspaces/remember-workspace";
 import { getCurrentUser } from "@/lib/session";
 import { getUserWorkspaces } from "@/lib/workspaces";
 
@@ -28,6 +29,7 @@ export default async function WorkspaceLayout({
 
   return (
     <div className="flex min-h-screen bg-muted/40">
+      <RememberWorkspace slug={currentWorkspace.slug} />
       <AppSidebar workspaces={workspaces} currentWorkspace={currentWorkspace} />
       <div className="flex min-w-0 flex-1 flex-col">
         <AppTopbar user={sessionUser} workspaces={workspaces} currentWorkspace={currentWorkspace} />
