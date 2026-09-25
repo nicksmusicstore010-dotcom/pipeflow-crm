@@ -8,7 +8,7 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 | --- | --- | --- |
 | 1 | Fundação | ✅ |
 | 2 | Workspaces (multiempresa) | ✅ |
-| 3 | Leads | ⬜ |
+| 3 | Leads | ✅ |
 | 4 | Pipeline Kanban | ⬜ (base visual pronta) |
 | 5 | Atividades | ⬜ |
 | 6 | Dashboard | ⬜ |
@@ -93,15 +93,23 @@ Branch: `feat/m2-workspaces`
 
 ---
 
-## 3. Leads ⬜
+## 3. Leads ✅
 
-- [ ] Migration: `leads` (name, email, phone, company, position, status, owner_id, workspace_id) + RLS + índices
-- [ ] Server Actions: criar, editar e excluir lead, com validação Zod
-- [ ] Listagem em tabela com busca (nome, e-mail, empresa) e filtros (status, responsável, data de criação) via query string
-- [ ] Paginação
-- [ ] Formulário de lead em dialog (react-hook-form + Zod)
-- [ ] Página de detalhe `/leads/[leadId]` com o perfil (a timeline chega no milestone 5)
-- [ ] Estados vazios e de carregamento
+Branch: `feat/m3-leads`
+
+- [x] Migration `20260924220000_leads.sql`: enum `lead_status` (`new`, `contacted`, `qualified`, `unqualified`, `customer` → Novo, Em contato, Qualificado, Desqualificado, Cliente) e tabela `leads` + índices por workspace; RLS (membros fazem CRUD; responsável precisa ser membro do mesmo workspace via `is_user_in_workspace()`); grants por coluna (`workspace_id` não muda depois de criado; `created_by` vem de `auth.uid()`). Aplicada no remoto; tipos regenerados
+- [x] Server Actions `createLead` / `updateLead` / `deleteLead` (`src/actions/leads.ts`) com o mesmo schema Zod do formulário (`src/lib/validations/lead.ts`); e-mail normalizado em minúsculas
+- [x] Listagem em tabela com busca (nome, e-mail, empresa) e filtros (status, responsável — incluindo "sem responsável" —, data de criação em dias de São Paulo) na query string (`src/lib/leads.ts`)
+- [x] Paginação (20 por página, "Mostrando 21–40 de 57"; página além do fim volta para a 1)
+- [x] Formulário de lead em dialog (react-hook-form + Zod), usado para criar e editar; responsável padrão = usuário logado
+- [x] Página de detalhe `/leads/[leadId]` com contato (mailto/tel), status, responsável e datas; editar e excluir (com confirmação); área de atividades reservada para o milestone 5
+- [x] Estados vazios (sem leads / sem resultado no filtro), `loading.tsx` com skeleton e "Lead não encontrado" dentro do app
+- [ ] Limite de 50 leads no plano Free → fica para o milestone 8 (`lib/plans.ts`)
+
+**Verificação (24/09/2026):**
+- [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
+- [x] Migration + RLS testadas em transação com rollback antes do `db push` (11 checagens: membro cria/edita/exclui; não insere em outro workspace; responsável de fora rejeitado; não lê/edita/exclui lead alheio; `workspace_id` imutável; nome em branco rejeitado; anônimo bloqueado)
+- [x] Ponta a ponta no navegador (Playwright + Edge, build de produção, 54 checagens, usuários de teste apagados depois): estado vazio, validação do formulário, criar/editar/excluir, busca por nome/e-mail/empresa e com caracteres especiais, cada filtro e combinações, paginação mantendo filtros, parâmetros inválidos ignorados, lead de outro workspace/excluído/id inválido → "Lead não encontrado" sem vazar dados, mobile sem rolagem horizontal, sem erros no console
 
 **Pronto quando:** dá para cadastrar, buscar, filtrar, editar e excluir leads, e os leads de um workspace não aparecem em outro.
 
