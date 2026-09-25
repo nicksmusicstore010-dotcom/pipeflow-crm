@@ -14,19 +14,26 @@ export type AuthFormState = {
   needsConfirmation?: boolean;
 };
 
+// Trimmed and lowercased: a stray space from autofill or the phone keyboard isn't a typo.
+const emailField = z.string().trim().toLowerCase().pipe(z.email("Informe um e-mail válido."));
+
 const loginSchema = z.object({
-  email: z.email("Informe um e-mail válido."),
+  email: emailField,
   password: z.string().min(1, "Informe sua senha."),
 });
 
 const signupSchema = z.object({
-  fullName: z.string().trim().min(2, "Informe seu nome."),
-  email: z.email("Informe um e-mail válido."),
-  password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres."),
+  fullName: z.string().trim().min(2, "Informe seu nome.").max(100, "Use no máximo 100 caracteres no nome."),
+  email: emailField,
+  // Supabase (bcrypt) rejects passwords longer than 72 characters.
+  password: z
+    .string()
+    .min(8, "A senha precisa ter pelo menos 8 caracteres.")
+    .max(72, "A senha pode ter no máximo 72 caracteres."),
 });
 
 const resendSchema = z.object({
-  email: z.email("Informe um e-mail válido."),
+  email: emailField,
 });
 
 /** Base URL for links in auth e-mails: the current origin, or the configured site URL. */

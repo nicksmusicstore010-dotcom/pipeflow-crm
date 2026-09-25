@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { NETWORK_ERROR, toastActionError } from "@/lib/action-feedback";
 
 /** "Excluir" button with a confirmation dialog; goes back to the list afterwards. */
 export function DeleteLeadButton({
@@ -33,9 +34,9 @@ export function DeleteLeadButton({
 
   function confirmDelete() {
     startTransition(async () => {
-      const result = await deleteLead(workspaceSlug, leadId);
+      const result = await deleteLead(workspaceSlug, leadId).catch(() => NETWORK_ERROR);
       if (!result.ok) {
-        toast.error(result.error);
+        toastActionError(result);
         return;
       }
       setOpen(false);

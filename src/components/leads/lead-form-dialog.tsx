@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { NETWORK_ERROR, toastActionError } from "@/lib/action-feedback";
 import { LEAD_STATUS_STYLES, LEAD_STATUSES } from "@/lib/lead-status";
 import type { Lead } from "@/lib/leads";
 import { leadSchema, type LeadFormValues } from "@/lib/validations/lead";
@@ -29,7 +30,9 @@ import type { WorkspaceMember } from "@/lib/workspaces";
 // Radix Select can't use "" as an item value.
 const NO_OWNER = "none";
 
-function defaultValues(lead: Lead | undefined, currentUserId: string): LeadFormValues {
+function defaultValues(lead: Lead | undefined, currentUserId: string, members: WorkspaceMember[]): LeadFormValues {
+  // An owner who left the workspace can't be kept (RLS rejects the save), so start with none.
+  const ownerId = lead ? lead.owner_id : currentUserId;
   return {
     name: lead?.name ?? "",
     email: lead?.email ?? "",
@@ -37,7 +40,7 @@ function defaultValues(lead: Lead | undefined, currentUserId: string): LeadFormV
     company: lead?.company ?? "",
     position: lead?.position ?? "",
     status: lead?.status ?? "new",
-    ownerId: lead ? (lead.owner_id ?? "") : currentUserId,
+    ownerId: ownerId && members.some((m) => m.id === ownerId) ? ownerId : "",
   };
 }
 
@@ -61,23 +64,22 @@ export function LeadFormDialog({
 
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(leadSchema),
-    defaultValues: defaultValues(lead, currentUserId),
+    defaultValues: defaultValues(lead, currentUserId, members),
   });
   const { errors, isSubmitting } = form.formState;
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
     // Start from the saved values every time the dialog opens.
-    if (next) form.reset(defaultValues(lead, currentUserId));
+    if (next) form.reset(defaultValues(lead, currentUserId, members));
   }
 
   async function onSubmit(values: LeadFormValues) {
-    const result = lead
-      ? await updateLead(workspaceSlug, lead.id, values)
-      : await createLead(workspaceSlug, values);
+    const save = lead ? updateLead(workspaceSlug, lead.id, values) : createLead(workspaceSlug, values);
+    const result = await save.catch(() => NETWORK_ERROR);
 
     if (!result.ok) {
-      toast.error(result.error);
+      toastActionError(result);
       return;
     }
 

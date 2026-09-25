@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { safeNextPath } from "@/lib/safe-redirect";
+
 import { getSupabaseEnv } from "./env";
 
 const PUBLIC_PATHS = ["/", "/pricing"];
@@ -48,7 +50,11 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname, search } = request.nextUrl;
 
-  if (!user && !isPublic(pathname)) {
+  // A Server Action can't follow a redirect to the login page (the caller gets `undefined`),
+  // so let it through: every action checks the session itself and returns a proper error.
+  const isServerAction = request.method === "POST" && request.headers.has("next-action");
+
+  if (!user && !isPublic(pathname) && !isServerAction) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.search = "";
@@ -57,10 +63,9 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && AUTH_PATHS.includes(pathname)) {
-    const appUrl = request.nextUrl.clone();
-    appUrl.pathname = AFTER_LOGIN_PATH;
-    appUrl.search = "";
-    return redirectWithCookies(appUrl, response);
+    // Already logged in (e.g. a second tab): go where the login would have sent them.
+    const target = safeNextPath(request.nextUrl.searchParams.get("next"), AFTER_LOGIN_PATH);
+    return redirectWithCookies(new URL(target, request.url), response);
   }
 
   return response;

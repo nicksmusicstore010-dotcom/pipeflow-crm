@@ -11,7 +11,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
-      className="toaster group"
+      // pointer-events-auto: an open Radix dialog disables pointer events on <body>, which
+      // would make toast actions (e.g. "Entrar" after an expired session) unclickable.
+      className="toaster group pointer-events-auto"
       toastOptions={{
         classNames: {
           toast:

@@ -26,9 +26,12 @@ const LINK_OUTCOMES: Record<string, AuthFormState> = {
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams: { next?: string; error?: string };
+  searchParams: { next?: string | string[]; error?: string | string[] };
 }) {
-  const initialState = (searchParams.error && LINK_OUTCOMES[searchParams.error]) || {};
+  // Own keys only: `?error=constructor` would otherwise pick up Object.prototype members.
+  const error = typeof searchParams.error === "string" ? searchParams.error : undefined;
+  const initialState = (error && Object.hasOwn(LINK_OUTCOMES, error) && LINK_OUTCOMES[error]) || {};
+  const next = typeof searchParams.next === "string" ? searchParams.next : undefined;
 
-  return <LoginForm next={searchParams.next} initialState={initialState} />;
+  return <LoginForm next={next} initialState={initialState} />;
 }
