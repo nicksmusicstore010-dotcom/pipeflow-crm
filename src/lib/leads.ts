@@ -22,10 +22,23 @@ export type LeadFilters = {
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+// Far beyond any real list; keeps the range offset a plain integer.
+const MAX_PAGE = 100_000;
 
 function single(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
+}
+
+/** A real calendar date in yyyy-MM-dd ("2026-02-31" and "2026-13-01" are rejected), or null. */
+function parseDate(value: string | undefined) {
+  const match = value ? DATE.exec(value) : null;
+  if (!match) return null;
+  const [year, month, day] = match.slice(1).map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  const valid =
+    year >= 1900 && date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+  return valid ? value! : null;
 }
 
 /** Query string → filters. Anything invalid is ignored rather than erroring. */
@@ -33,16 +46,15 @@ export function parseLeadFilters(searchParams: SearchParams): LeadFilters {
   const status = single(searchParams.status);
   const owner = single(searchParams.owner);
   const from = single(searchParams.from);
-  const to = single(searchParams.to);
-  const page = Number.parseInt(single(searchParams.page) ?? "1", 10);
+  const to = single(searchParams.to);  const page = Number.parseInt(single(searchParams.page) ?? "1", 10);
 
   return {
     q: (single(searchParams.q) ?? "").trim().slice(0, 100),
     status: isLeadStatus(status) ? status : null,
     owner: owner === "none" || z.uuid().safeParse(owner).success ? owner! : null,
-    from: from && DATE.test(from) ? from : null,
-    to: to && DATE.test(to) ? to : null,
-    page: Number.isFinite(page) && page > 0 ? page : 1,
+    from: parseDate(from),
+    to: parseDate(to),
+    page: Number.isFinite(page) && page > 0 ? Math.min(page, MAX_PAGE) : 1,
   };
 }
 
@@ -101,3 +113,14 @@ export const getLead = cache(async (workspaceId: string, leadId: string) => {
   if (error) throw error;
   return data;
 });
+
+/** Number of leads in a workspace (head-only count, no rows transferred). */
+export async function countLeads(workspaceId: string) {
+  const supabase = createClient();
+  const { count, error } = await supabase
+    .from("leads")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", workspaceId);
+  if (error) throw error;
+  return count ?? 0;
+}

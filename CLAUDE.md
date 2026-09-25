@@ -60,6 +60,7 @@ src/
     lead-status.ts          # status dos leads: ordem, rótulos e cores (fonte única)
     leads.ts                # consultas de leads (listagem com filtros/paginação, detalhe)
     validations/            # schemas Zod compartilhados entre formulário e Server Action
+    action-feedback.ts      # toast de erro de Server Action (sessão expirada, sem conexão)
     utils.ts                # cn(), formatCurrency(), formatDate(), initials()
   actions/                  # Server Actions por domínio (leads.ts, deals.ts, activities.ts, workspaces.ts...)
   hooks/

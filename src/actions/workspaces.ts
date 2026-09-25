@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { getCurrentUser } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { workspaceSlugFor } from "@/lib/workspace-slug";
 
@@ -24,6 +25,8 @@ export async function createWorkspace(
 ): Promise<WorkspaceFormState> {
   const parsed = createWorkspaceSchema.safeParse({ name: formData.get("name") });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+
+  if (!(await getCurrentUser())) return { error: "Sua sessão expirou. Recarregue a página e entre novamente." };
 
   // create_workspace() inserts the workspace and the caller as admin atomically.
   const supabase = createClient();

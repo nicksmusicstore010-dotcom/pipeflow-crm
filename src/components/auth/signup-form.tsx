@@ -40,7 +40,7 @@ export function SignupForm() {
           {state.error && <FormMessage type="error">{state.error}</FormMessage>}
           <div className="space-y-2">
             <Label htmlFor="fullName">Nome</Label>
-            <Input id="fullName" name="fullName" autoComplete="name" required />
+            <Input id="fullName" name="fullName" autoComplete="name" maxLength={100} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">E-mail</Label>
@@ -54,6 +54,7 @@ export function SignupForm() {
               type="password"
               autoComplete="new-password"
               minLength={8}
+              maxLength={72}
               required
             />
             <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres.</p>

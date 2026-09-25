@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LEAD_STATUS_STYLES, LEAD_STATUSES } from "@/lib/lead-status";
+import { isLeadStatus, LEAD_STATUS_STYLES, LEAD_STATUSES } from "@/lib/lead-status";
 import type { WorkspaceMember } from "@/lib/workspaces";
 
 const ALL = "all";
@@ -24,6 +24,10 @@ export function LeadsFilters({ members, currentUserId }: { members: WorkspaceMem
 
   function update(changes: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString());
+    // Carry text still waiting for the debounce, so changing a select doesn't drop it.
+    const q = query.trim();
+    if (q) params.set("q", q);
+    else params.delete("q");
     for (const [key, value] of Object.entries(changes)) {
       if (value) params.set(key, value);
       else params.delete(key);
@@ -42,11 +46,18 @@ export function LeadsFilters({ members, currentUserId }: { members: WorkspaceMem
   }, [query]);
 
   // Keep the box in sync when the URL changes from outside (clear filters, back button).
+  // Same term modulo whitespace = our own update: keep what's typed ("Maria " mid-typing).
   useEffect(() => {
-    setQuery(searchParams.get("q") ?? "");
+    const urlQuery = searchParams.get("q") ?? "";
+    setQuery((current) => (current.trim() === urlQuery ? current : urlQuery));
   }, [searchParams]);
 
   const hasFilters = FILTER_KEYS.some((key) => searchParams.has(key));
+  // Values the server ignores (typo, a member who left) show as "Todos" instead of a blank select.
+  const status = searchParams.get("status");
+  const statusValue = isLeadStatus(status) ? status : ALL;
+  const owner = searchParams.get("owner");
+  const ownerValue = owner === "none" || members.some((m) => m.id === owner) ? owner! : ALL;
 
   return (
     <div className="mb-4 space-y-3">
@@ -79,7 +90,7 @@ export function LeadsFilters({ members, currentUserId }: { members: WorkspaceMem
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:flex">
         <FilterField id="leads-status" label="Status">
           <Select
-            value={searchParams.get("status") ?? ALL}
+            value={statusValue}
             onValueChange={(v) => update({ status: v === ALL ? null : v })}
           >
             <SelectTrigger id="leads-status" aria-label="Filtrar por status" className="lg:w-44">
@@ -98,7 +109,7 @@ export function LeadsFilters({ members, currentUserId }: { members: WorkspaceMem
 
         <FilterField id="leads-owner" label="Responsável">
           <Select
-            value={searchParams.get("owner") ?? ALL}
+            value={ownerValue}
             onValueChange={(v) => update({ owner: v === ALL ? null : v })}
           >
             <SelectTrigger id="leads-owner" aria-label="Filtrar por responsável" className="lg:w-52">

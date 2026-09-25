@@ -34,7 +34,7 @@ export default async function LeadsPage({
 
   const basePath = `/${workspace.slug}/leads`;
   // A page past the end (stale link, deleted leads): go back to the first page.
-  if (leads.length === 0 && filters.page > 1) {
+  if (filters.page > 1 && (leads.length === 0 || filters.page > Math.ceil(total / LEADS_PAGE_SIZE))) {
     const rest = Object.entries(searchParams).filter(([key, v]) => key !== "page" && typeof v === "string");
     const qs = new URLSearchParams(rest as [string, string][]).toString();
     redirect(qs ? `${basePath}?${qs}` : basePath);
