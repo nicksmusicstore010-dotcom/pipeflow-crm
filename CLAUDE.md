@@ -58,6 +58,8 @@ src/
     plans.ts                # limites dos planos (fonte única da verdade)
     deal-stages.ts          # ordem, rótulos e cores das etapas do pipeline (fonte única)
     lead-status.ts          # status dos leads: ordem, rótulos e cores (fonte única)
+    activity-types.ts       # tipos de atividade: ordem, rótulos, ícones e cores (fonte única)
+    activities.ts           # consultas de atividades (timeline do lead)
     leads.ts                # consultas de leads (listagem com filtros/paginação, detalhe)
     sample-leads.ts         # leads de exemplo (fictícios) do botão "Carregar leads de exemplo"
     deals.ts                # consultas de negócios (board, negócios do lead, resumo do pipeline)
@@ -114,6 +116,10 @@ Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `
 - **Membro**: CRUD de leads, negócios e atividades. Sem acesso a settings/billing.
 - Limites do plano Free (2 colaboradores, 50 leads) são checados **no servidor** antes de inserir, lendo de `lib/plans.ts`. Na UI, mostrar o limite e um CTA de upgrade.
 - O plano do workspace só muda via webhook do Stripe (verificando a assinatura do evento) — nunca a partir do client.
+
+### Atividades
+- Qualquer membro registra; só o autor ou um admin edita/exclui (RLS + menu só para quem pode). `author_id` vem de `auth.uid()`, nunca do cliente.
+- `occurred_at` é digitado no horário de São Paulo: converter com `fromSaoPauloInput()` / `toSaoPauloInput()` de `lib/utils.ts`.
 
 ### Kanban
 - Drag-and-drop com @dnd-kit; atualização otimista na UI e persistência de `stage` + `position` via Server Action; reverter se falhar.

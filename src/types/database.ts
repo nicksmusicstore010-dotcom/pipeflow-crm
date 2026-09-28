@@ -39,6 +39,64 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          author_id: string | null
+          created_at: string
+          description: string
+          id: string
+          lead_id: string
+          occurred_at: string
+          type: Database["public"]["Enums"]["activity_type"]
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          lead_id: string
+          occurred_at?: string
+          type: Database["public"]["Enums"]["activity_type"]
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          author_id?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          lead_id?: string
+          occurred_at?: string
+          type?: Database["public"]["Enums"]["activity_type"]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_lead_id_workspace_id_fkey"
+            columns: ["lead_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "activities_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deals: {
         Row: {
           created_at: string
@@ -325,6 +383,7 @@ export type Database = {
       shares_workspace_with: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
+      activity_type: "call" | "email" | "meeting" | "note"
       deal_stage:
         | "new_lead"
         | "contacted"
@@ -470,6 +529,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      activity_type: ["call", "email", "meeting", "note"],
       deal_stage: [
         "new_lead",
         "contacted",
