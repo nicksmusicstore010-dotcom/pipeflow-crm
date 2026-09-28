@@ -106,6 +106,12 @@ Branch: `feat/m3-leads`
 - [x] Estados vazios (sem leads / sem resultado no filtro), `loading.tsx` com skeleton e "Lead não encontrado" dentro do app
 - [ ] Limite de 50 leads no plano Free → fica para o milestone 8 (`lib/plans.ts`)
 
+**Leads de exemplo, busca sem acento e histórico (28/09/2026):**
+- [x] Botão "Carregar leads de exemplo" no estado vazio: 12 leads brasileiros fictícios (`src/lib/sample-leads.ts`) com status variados, gravados no banco pela Server Action `createSampleLeads` — só num workspace sem leads (clique duplo não duplica)
+- [x] Busca sem diferenciar acentos nem maiúsculas ("joao" acha "João", "clinica" acha "Clínica"): migration `20260928120000_leads_search.sql` com coluna gerada `search_text` (`unaccent` + `lower` de nome, e-mail e empresa) e índice trigram
+- [x] Histórico visual no detalhe do lead (`LeadTimeline`): lead cadastrado, negócios criados (etapa e valor) e última edição, com autor e data/hora de São Paulo, do mais novo para o mais antigo. Ligações, e-mails, reuniões e notas entram nele no milestone 5
+- [x] Verificação: busca de ponta a ponta sem acento em transação com rollback antes do `db push`; Playwright + Edge no build de produção (45 checagens novas: exemplos, cores dos badges, busca por nome/empresa com e sem acento, curingas, filtros de status e responsável combinados, validação do formulário ao criar e editar, excluir, detalhe e histórico, mobile, tema claro, sem erros no console) + as 54 checagens do M3 de novo
+
 **Verificação (24/09/2026):**
 - [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
 - [x] Migration + RLS testadas em transação com rollback antes do `db push` (11 checagens: membro cria/edita/exclui; não insere em outro workspace; responsável de fora rejeitado; não lê/edita/exclui lead alheio; `workspace_id` imutável; nome em branco rejeitado; anônimo bloqueado)
@@ -144,7 +150,7 @@ Branch: `feat/m4-pipeline`
 
 - [ ] Migration: enum `activity_type` (`call`, `email`, `meeting`, `note`) e tabela `activities` + RLS
 - [ ] Formulário de nova atividade no detalhe do lead (tipo, descrição, data)
-- [ ] Timeline cronológica com ícone por tipo, autor e data
+- [ ] Timeline cronológica com ícone por tipo, autor e data — componente `LeadTimeline` já no detalhe do lead (hoje com cadastro, negócios e edição); falta incluir as atividades
 - [ ] Editar e excluir (apenas o autor ou um admin)
 
 **Pronto quando:** as atividades aparecem na timeline do lead em ordem cronológica, com o autor correto.

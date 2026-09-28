@@ -65,6 +65,11 @@ export function hasActiveFilters(filters: LeadFilters) {
 // Brazil has had no DST since 2019, so São Paulo is a fixed UTC-3.
 const startOfDaySaoPaulo = (date: string) => new Date(`${date}T00:00:00-03:00`);
 
+/** Same as the database's search_normalize(): "João" → "joao". */
+function normalizeSearch(text: string) {
+  return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
 /** One page of leads matching the filters, newest first, plus the total count. */
 export async function listLeads(workspaceId: string, filters: LeadFilters) {
   const supabase = createClient();
@@ -74,9 +79,10 @@ export async function listLeads(workspaceId: string, filters: LeadFilters) {
     .eq("workspace_id", workspaceId);
 
   if (filters.q) {
-    // Characters with meaning in PostgREST's or() / ilike syntax are dropped.
-    const term = filters.q.replace(/[%_,()*"\\]/g, " ").trim();
-    if (term) query = query.or(`name.ilike.%${term}%,email.ilike.%${term}%,company.ilike.%${term}%`);
+    // `search_text` is name + e-mail + company without accents, lowercased (see the
+    // leads_search migration); the term gets the same treatment. Wildcards are dropped.
+    const term = normalizeSearch(filters.q).replace(/[%_*\\]/g, " ").trim();
+    if (term) query = query.ilike("search_text", `%${term}%`);
   }
   if (filters.status) query = query.eq("status", filters.status);
   if (filters.owner === "none") query = query.is("owner_id", null);

@@ -5,6 +5,8 @@ import { z } from "zod";
 
 import type { ActionResult } from "@/lib/action-result";
 import { resolveWorkspace } from "@/lib/action-workspace";
+import { SAMPLE_LEADS } from "@/lib/sample-leads";
+import { getCurrentUser } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { leadSchema, toLeadRow } from "@/lib/validations/lead";
 
@@ -88,4 +90,31 @@ export async function deleteLead(workspaceSlug: string, leadId: string): Promise
 
   revalidatePath(`/${workspace.slug}`, "layout");
   return { ok: true, leadId: data.id };
+}
+
+/** Fills an empty workspace with the example leads, so the CRM can be tried right away. */
+export async function createSampleLeads(workspaceSlug: string): Promise<ActionResult<{ count: number }>> {
+  const resolved = await resolveWorkspace(workspaceSlug);
+  if ("error" in resolved) return resolved.error;
+  const { workspace } = resolved;
+  const user = await getCurrentUser();
+
+  const supabase = createClient();
+  // Only for an empty workspace: a second click (or another tab) must not duplicate them.
+  const { count, error: countError } = await supabase
+    .from("leads")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", workspace.id);
+  if (countError) return { ok: false, error: "Não foi possível carregar os exemplos. Tente novamente." };
+  if (count) return { ok: false, error: "Os exemplos só podem ser carregados num workspace sem leads." };
+
+  const rows = SAMPLE_LEADS.map(({ owned, ...lead }) => ({
+    ...toLeadRow(leadSchema.parse({ ...lead, ownerId: owned && user ? user.id : "" })),
+    workspace_id: workspace.id,
+  }));
+  const { error } = await supabase.from("leads").insert(rows);
+  if (error) return { ok: false, error: "Não foi possível carregar os exemplos. Tente novamente." };
+
+  revalidatePath(`/${workspace.slug}`, "layout");
+  return { ok: true, count: rows.length };
 }

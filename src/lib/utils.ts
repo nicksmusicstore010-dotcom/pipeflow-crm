@@ -24,6 +24,22 @@ export function formatDate(value: string | Date) {
   return dateFormatter.format(typeof value === "string" ? new Date(value) : value)
 }
 
+const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "America/Sao_Paulo",
+})
+
+/** timestamptz → "25/09/2026 às 14:32" in America/Sao_Paulo. */
+export function formatDateTime(value: string | Date) {
+  const parts = dateTimeFormatter.formatToParts(typeof value === "string" ? new Date(value) : value)
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? ""
+  return `${get("day")}/${get("month")}/${get("year")} às ${get("hour")}:${get("minute")}`
+}
+
 /** First character of a string, emoji-safe ("🚀 Time" → "🚀", not half a surrogate pair). */
 export function firstChar(value: string) {
   return Array.from(value.trim())[0] ?? ""

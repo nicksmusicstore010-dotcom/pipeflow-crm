@@ -9,6 +9,7 @@ import { LeadFormDialog } from "@/components/leads/lead-form-dialog";
 import { LeadsFilters } from "@/components/leads/leads-filters";
 import { LeadsPagination } from "@/components/leads/leads-pagination";
 import { LeadsTable } from "@/components/leads/leads-table";
+import { SampleLeadsButton } from "@/components/leads/sample-leads-button";
 import { Button } from "@/components/ui/button";
 import { hasActiveFilters, LEADS_PAGE_SIZE, listLeads, parseLeadFilters } from "@/lib/leads";
 import { getCurrentUser } from "@/lib/session";
@@ -63,8 +64,13 @@ export default async function LeadsPage({
         <EmptyState
           icon={Users}
           title="Nenhum lead ainda"
-          description="Cadastre o primeiro contato para começar a acompanhar suas oportunidades."
-          action={newLeadButton("Cadastrar primeiro lead")}
+          description="Cadastre o primeiro contato para começar a acompanhar suas oportunidades — ou carregue alguns exemplos para explorar."
+          action={
+            <div className="flex flex-wrap justify-center gap-2">
+              {newLeadButton("Cadastrar primeiro lead")}
+              <SampleLeadsButton workspaceSlug={workspace.slug} />
+            </div>
+          }
         />
       ) : (
         <>
