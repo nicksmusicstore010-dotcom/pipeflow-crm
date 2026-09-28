@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Building2, Briefcase, History, Mail, Pencil, Phone } from "lucide-react";
+import { ArrowLeft, Building2, Briefcase, Mail, Pencil, Phone } from "lucide-react";
 
-import { EmptyState } from "@/components/layout/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { DeleteLeadButton } from "@/components/leads/delete-lead-button";
 import { LeadFormDialog } from "@/components/leads/lead-form-dialog";
 import { LeadStatusBadge } from "@/components/leads/lead-status-badge";
+import { LeadTimeline } from "@/components/leads/lead-timeline";
 import { LeadDeals } from "@/components/pipeline/lead-deals";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button } from "@/components/ui/button";
@@ -147,14 +147,13 @@ export default async function LeadDetailPage({ params }: { params: Params }) {
             currentUserId={user.id}
             today={todaySaoPaulo()}
           />
-          <div>
-            <h2 className="mb-3 text-base font-semibold">Atividades</h2>
-            <EmptyState
-              icon={History}
-              title="Nenhuma atividade registrada"
-              description="Em breve você poderá registrar ligações, e-mails, reuniões e notas com este lead."
-            />
-          </div>
+          <section>
+            <h2 className="mb-3 text-base font-semibold">Histórico</h2>
+            <LeadTimeline lead={lead} deals={deals} memberNames={new Map(members.map((m) => [m.id, m.name]))} />
+            <p className="mt-2 text-xs text-muted-foreground">
+              Em breve você poderá registrar ligações, e-mails, reuniões e notas aqui.
+            </p>
+          </section>
         </div>
       </div>
     </>

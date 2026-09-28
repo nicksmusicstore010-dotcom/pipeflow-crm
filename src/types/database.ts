@@ -124,6 +124,7 @@ export type Database = {
           owner_id: string | null
           phone: string | null
           position: string | null
+          search_text: string | null
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
           workspace_id: string
@@ -138,6 +139,7 @@ export type Database = {
           owner_id?: string | null
           phone?: string | null
           position?: string | null
+          search_text?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
           workspace_id: string
@@ -152,6 +154,7 @@ export type Database = {
           owner_id?: string | null
           phone?: string | null
           position?: string | null
+          search_text?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
           workspace_id?: string
@@ -318,6 +321,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      search_normalize: { Args: { p_text: string }; Returns: string }
       shares_workspace_with: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {

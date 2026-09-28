@@ -3,11 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
 const DEAL_COLUMNS =
-  "id, title, value_cents, stage, position, owner_id, lead_id, due_date, created_at, lead:leads(id, name)" as const;
+  "id, title, value_cents, stage, position, owner_id, lead_id, due_date, created_at, created_by, lead:leads(id, name)" as const;
 
 export type Deal = Pick<
   Tables<"deals">,
-  "id" | "title" | "value_cents" | "stage" | "position" | "owner_id" | "lead_id" | "due_date" | "created_at"
+  "id" | "title" | "value_cents" | "stage" | "position" | "owner_id" | "lead_id" | "due_date" | "created_at" | "created_by"
 > & { lead: { id: string; name: string } | null };
 
 /** Every deal of the workspace in board order (stage, then position inside the column). */

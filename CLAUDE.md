@@ -59,6 +59,7 @@ src/
     deal-stages.ts          # ordem, rótulos e cores das etapas do pipeline (fonte única)
     lead-status.ts          # status dos leads: ordem, rótulos e cores (fonte única)
     leads.ts                # consultas de leads (listagem com filtros/paginação, detalhe)
+    sample-leads.ts         # leads de exemplo (fictícios) do botão "Carregar leads de exemplo"
     deals.ts                # consultas de negócios (board, negócios do lead, resumo do pipeline)
     validations/            # schemas Zod compartilhados entre formulário e Server Action
     action-result.ts        # tipo de retorno das Server Actions ({ ok: true } | ActionFailure)
@@ -106,6 +107,7 @@ Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `
 - Mudanças de schema sempre como nova migration em `supabase/migrations/`; nunca editar migrations já aplicadas.
 - Valores monetários armazenados em **centavos (integer)** e formatados como BRL (`R$ 1.234,56`) só na exibição.
 - Datas em `timestamptz` (UTC) no banco; exibição em `America/Sao_Paulo`, formato `dd/MM/yyyy`.
+- Busca de leads usa a coluna gerada `search_text` (sem acentos, minúscula); normalize o termo do mesmo jeito antes do `ilike`.
 
 ### Permissões e planos
 - **Admin**: tudo, incluindo membros, convites, billing e configurações do workspace.
