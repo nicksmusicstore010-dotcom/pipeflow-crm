@@ -39,6 +39,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      deals: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          id: string
+          lead_id: string | null
+          owner_id: string | null
+          position: number
+          stage: Database["public"]["Enums"]["deal_stage"]
+          title: string
+          updated_at: string
+          value_cents: number
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          lead_id?: string | null
+          owner_id?: string | null
+          position?: number
+          stage?: Database["public"]["Enums"]["deal_stage"]
+          title: string
+          updated_at?: string
+          value_cents?: number
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          lead_id?: string | null
+          owner_id?: string | null
+          position?: number
+          stage?: Database["public"]["Enums"]["deal_stage"]
+          title?: string
+          updated_at?: string
+          value_cents?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_lead_id_workspace_id_fkey"
+            columns: ["lead_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "deals_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           company: string | null
@@ -236,9 +310,24 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: boolean
       }
+      move_deal: {
+        Args: {
+          p_deal_id: string
+          p_index: number
+          p_stage: Database["public"]["Enums"]["deal_stage"]
+        }
+        Returns: undefined
+      }
       shares_workspace_with: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
+      deal_stage:
+        | "new_lead"
+        | "contacted"
+        | "proposal_sent"
+        | "negotiation"
+        | "won"
+        | "lost"
       lead_status:
         | "new"
         | "contacted"
@@ -377,6 +466,14 @@ export const Constants = {
   },
   public: {
     Enums: {
+      deal_stage: [
+        "new_lead",
+        "contacted",
+        "proposal_sent",
+        "negotiation",
+        "won",
+        "lost",
+      ],
       lead_status: ["new", "contacted", "qualified", "unqualified", "customer"],
       workspace_plan: ["free", "pro"],
       workspace_role: ["admin", "member"],

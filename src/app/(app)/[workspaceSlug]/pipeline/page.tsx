@@ -1,24 +1,68 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { Handshake, Plus } from "lucide-react";
 
+import { EmptyState } from "@/components/layout/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
-import { KanbanColumn } from "@/components/pipeline/kanban-column";
-import { DEAL_STAGES } from "@/lib/deal-stages";
+import { DealFormDialog } from "@/components/pipeline/deal-form-dialog";
+import { PipelineBoard } from "@/components/pipeline/pipeline-board";
+import { Button } from "@/components/ui/button";
+import { listDeals, listLeadOptions } from "@/lib/deals";
+import { getCurrentUser } from "@/lib/session";
+import { todaySaoPaulo } from "@/lib/utils";
+import { getWorkspaceBySlug, getWorkspaceMembers } from "@/lib/workspaces";
 
 export const metadata: Metadata = { title: "Pipeline" };
 
-export default function PipelinePage() {
-  // Empty board for now; deals and drag-and-drop arrive in milestone 4.
+export default async function PipelinePage({ params }: { params: { workspaceSlug: string } }) {
+  const [workspace, user] = await Promise.all([getWorkspaceBySlug(params.workspaceSlug), getCurrentUser()]);
+  if (!workspace || !user) notFound();
+
+  const [deals, members, leads] = await Promise.all([
+    listDeals(workspace.id),
+    getWorkspaceMembers(workspace.id),
+    listLeadOptions(workspace.id),
+  ]);
+
+  const newDealButton = (label: string) => (
+    <DealFormDialog
+      workspaceSlug={workspace.slug}
+      members={members}
+      leads={leads}
+      currentUserId={user.id}
+      trigger={
+        <Button>
+          <Plus />
+          {label}
+        </Button>
+      }
+    />
+  );
+
   return (
     <>
-      <PageHeader title="Pipeline" description="Acompanhe seus negócios por etapa." />
-      {/* Negative margins let the board scroll edge to edge on small screens. */}
-      <div className="-mx-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div className="flex gap-4">
-          {DEAL_STAGES.map((stage) => (
-            <KanbanColumn key={stage} stage={stage} count={0} totalCents={0} />
-          ))}
-        </div>
-      </div>
+      <PageHeader
+        title="Pipeline"
+        description="Acompanhe seus negócios por etapa. Arraste os cards para mudar de etapa."
+        actions={newDealButton("Novo negócio")}
+      />
+      {deals.length === 0 ? (
+        <EmptyState
+          icon={Handshake}
+          title="Nenhum negócio ainda"
+          description="Cadastre a primeira oportunidade e acompanhe ela da primeira conversa até o fechamento."
+          action={newDealButton("Cadastrar primeiro negócio")}
+        />
+      ) : (
+        <PipelineBoard
+          workspaceSlug={workspace.slug}
+          deals={deals}
+          members={members}
+          leads={leads}
+          currentUserId={user.id}
+          today={todaySaoPaulo()}
+        />
+      )}
     </>
   );
 }
