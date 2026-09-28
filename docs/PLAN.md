@@ -70,13 +70,14 @@ Branch: `feat/supabase-core`
 - [x] `getSupabaseSecretKey()` em `env.ts`: lê `SUPABASE_SECRET_KEY` (ou o nome antigo `SUPABASE_SERVICE_ROLE_KEY`) só quando o admin é usado — o app sobe sem ela
 - [x] `.env.example`, README (tabela das chaves) e CLAUDE.md documentando a chave secreta e onde ela pode ser usada
 - [x] `npm run check:keys` (`scripts/check-supabase-keys.mjs`): confere as chaves sem imprimi-las — publicável conecta e o RLS bloqueia o anônimo; secreta conecta e ignora o RLS; alerta se uma chave secreta tiver prefixo `NEXT_PUBLIC_`
-- [ ] Colar `SUPABASE_SECRET_KEY` no `.env.local` e na Vercel (Settings > Environment Variables) — feito pelo usuário; depois rodar `npm run check:keys`
+- [x] `SUPABASE_SECRET_KEY` no `.env.local`; `npm run check:keys` passou (publicável bloqueada pelo RLS, secreta conecta e ignora o RLS)
+- [ ] `SUPABASE_SECRET_KEY` na Vercel (Settings > Environment Variables) — feito pelo usuário
 
 **Verificação (28/09/2026):**
 - [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
 - [x] Componente de cliente temporário importando `admin.ts` → build falha com o erro do `server-only` (arquivo removido depois)
 - [x] Bundle do navegador (`static/`) sem nenhuma referência a `SUPABASE_SECRET_KEY`, `sb_secret` ou `createAdminClient`
-- [x] `npm run check:keys`: chave publicável ok e RLS bloqueando o anônimo; chave secreta pendente
+- [x] `npm run check:keys`: as duas chaves ok
 
 ---
 
