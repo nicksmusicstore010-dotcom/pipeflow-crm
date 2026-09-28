@@ -8,12 +8,14 @@ import { PageHeader } from "@/components/layout/page-header";
 import { DeleteLeadButton } from "@/components/leads/delete-lead-button";
 import { LeadFormDialog } from "@/components/leads/lead-form-dialog";
 import { LeadStatusBadge } from "@/components/leads/lead-status-badge";
+import { LeadDeals } from "@/components/pipeline/lead-deals";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { listLeadDeals, listLeadOptions } from "@/lib/deals";
 import { getLead } from "@/lib/leads";
 import { getCurrentUser } from "@/lib/session";
-import { formatDate } from "@/lib/utils";
+import { formatDate, todaySaoPaulo } from "@/lib/utils";
 import { getWorkspaceBySlug, getWorkspaceMembers } from "@/lib/workspaces";
 
 type Params = { workspaceSlug: string; leadId: string };
@@ -35,7 +37,11 @@ export default async function LeadDetailPage({ params }: { params: Params }) {
   if (!data || !user) notFound();
   const { workspace, lead } = data;
 
-  const members = await getWorkspaceMembers(workspace.id);
+  const [members, deals, leadOptions] = await Promise.all([
+    getWorkspaceMembers(workspace.id),
+    listLeadDeals(workspace.id, lead.id),
+    listLeadOptions(workspace.id),
+  ]);
   const ownerName = members.find((m) => m.id === lead.owner_id)?.name;
   const subtitle = [lead.position, lead.company].filter(Boolean).join(" · ");
 
@@ -131,13 +137,24 @@ export default async function LeadDetailPage({ params }: { params: Params }) {
           </Card>
         </div>
 
-        <div className="lg:col-span-2">
-          <h2 className="mb-3 text-base font-semibold">Atividades</h2>
-          <EmptyState
-            icon={History}
-            title="Nenhuma atividade registrada"
-            description="Em breve você poderá registrar ligações, e-mails, reuniões e notas com este lead."
+        <div className="space-y-6 lg:col-span-2">
+          <LeadDeals
+            workspaceSlug={workspace.slug}
+            leadId={lead.id}
+            deals={deals}
+            members={members}
+            leads={leadOptions}
+            currentUserId={user.id}
+            today={todaySaoPaulo()}
           />
+          <div>
+            <h2 className="mb-3 text-base font-semibold">Atividades</h2>
+            <EmptyState
+              icon={History}
+              title="Nenhuma atividade registrada"
+              description="Em breve você poderá registrar ligações, e-mails, reuniões e notas com este lead."
+            />
+          </div>
         </div>
       </div>
     </>

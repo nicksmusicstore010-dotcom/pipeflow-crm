@@ -36,3 +36,49 @@ export function initials(name: string) {
   const last = parts.length > 1 ? firstChar(parts[parts.length - 1]) : ""
   return (first + last).toUpperCase()
 }
+
+/** "2026-09-30" (a `date` column) → "30/09/2026". Not via Date: UTC midnight is the previous day in São Paulo. */
+export function formatDay(day: string) {
+  const [year, month, date] = day.split("-")
+  return `${date}/${month}/${year}`
+}
+
+const saoPauloDay = new Intl.DateTimeFormat("en-CA", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  timeZone: "America/Sao_Paulo",
+})
+
+/** Today in São Paulo as "yyyy-MM-dd". */
+export function todaySaoPaulo(now = new Date()) {
+  return saoPauloDay.format(now)
+}
+
+/** Whole days from `from` to `to`, both "yyyy-MM-dd" (negative when `to` is earlier). */
+export function daysBetween(from: string, to: string) {
+  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000)
+}
+
+/**
+ * What someone typed in a money field → cents, or null if it isn't a valid amount.
+ * Brazilian format: "1.234,56", "1234,5", "R$ 1.234" and "1234" are accepted; a lone dot with
+ * one or two decimals ("99.9") is read as the decimal separator.
+ */
+export function parseMoneyToCents(input: string) {
+  let text = input.replace(/R\$|\s/g, "")
+  if (text === "") return null
+  if (text.includes(",")) {
+    text = text.replace(/\./g, "").replace(",", ".")
+  } else if (/^\d{1,3}(\.\d{3})+$/.test(text)) {
+    text = text.replace(/\./g, "")
+  }
+  if (!/^\d+(\.\d{1,2})?$/.test(text)) return null
+  const cents = Math.round(Number(text) * 100)
+  return Number.isSafeInteger(cents) ? cents : null
+}
+
+/** Cents → "1.234,56" (no currency symbol), for money inputs. */
+export function formatMoneyInput(cents: number) {
+  return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cents / 100)
+}

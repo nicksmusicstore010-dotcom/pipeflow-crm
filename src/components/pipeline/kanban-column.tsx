@@ -10,12 +10,21 @@ export function KanbanColumn({
   count,
   totalCents,
   children,
+  footer,
+  listRef,
+  isOver = false,
   className,
 }: {
   stage: DealStage;
   count: number;
   totalCents: number;
   children?: React.ReactNode;
+  /** Below the cards (e.g. an "Adicionar" button). */
+  footer?: React.ReactNode;
+  /** Drop target of the card list (drag-and-drop). */
+  listRef?: React.Ref<HTMLDivElement>;
+  /** A card is being dragged over this column. */
+  isOver?: boolean;
   className?: string;
 }) {
   const { label, border, dot } = DEAL_STAGE_STYLES[stage];
@@ -24,8 +33,9 @@ export function KanbanColumn({
     <section
       aria-label={label}
       className={cn(
-        "flex w-72 shrink-0 flex-col rounded-lg border border-t-4 bg-card shadow-sm",
+        "flex w-72 shrink-0 flex-col rounded-lg border border-t-4 bg-card shadow-sm transition-colors",
         border,
+        isOver && "bg-muted/60",
         className,
       )}
     >
@@ -41,13 +51,14 @@ export function KanbanColumn({
           {formatCurrency(totalCents)}
         </span>
       </header>
-      <div className="flex min-h-40 flex-1 flex-col gap-2 p-2">
+      <div ref={listRef} className="flex min-h-40 flex-1 flex-col gap-2 p-2">
         {children ?? (
           <div className="flex flex-1 items-center justify-center rounded-md border border-dashed text-xs text-muted-foreground">
             Nenhum negócio
           </div>
         )}
       </div>
+      {footer && <div className="px-2 pb-2">{footer}</div>}
     </section>
   );
 }

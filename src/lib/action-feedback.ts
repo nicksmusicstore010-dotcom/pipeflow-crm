@@ -1,8 +1,6 @@
 import { toast } from "sonner";
 
-import type { LeadActionResult } from "@/actions/leads";
-
-type ActionFailure = Extract<LeadActionResult, { ok: false }>;
+import type { ActionFailure } from "@/lib/action-result";
 
 /** Error toast for a failed Server Action; an expired session gets an "Entrar" button back to this page. */
 export function toastActionError(failure: ActionFailure) {

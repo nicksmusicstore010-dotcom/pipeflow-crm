@@ -3,33 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { getCurrentUser } from "@/lib/session";
+import type { ActionResult } from "@/lib/action-result";
+import { resolveWorkspace } from "@/lib/action-workspace";
 import { createClient } from "@/lib/supabase/server";
 import { leadSchema, toLeadRow } from "@/lib/validations/lead";
-import { getWorkspaceBySlug, type WorkspaceSummary } from "@/lib/workspaces";
 
-export type LeadActionResult =
-  | { ok: true; leadId: string }
-  | { ok: false; error: string; /** Session expired: the client offers to log in again. */ unauthenticated?: boolean };
+export type LeadActionResult = ActionResult<{ leadId: string }>;
 
 const leadIdSchema = z.uuid();
 
 const GENERIC_ERROR = "Não foi possível salvar o lead. Tente novamente.";
-
-/**
- * The user's workspace for this slug, or the error to return (expired session / not a member).
- * RLS enforces membership again on write.
- */
-async function resolveWorkspace(
-  slug: string,
-): Promise<{ workspace: WorkspaceSummary } | { error: Extract<LeadActionResult, { ok: false }> }> {
-  if (!(await getCurrentUser())) {
-    return { error: { ok: false, error: "Sua sessão expirou. Entre novamente.", unauthenticated: true } };
-  }
-  const workspace = await getWorkspaceBySlug(slug);
-  if (!workspace) return { error: { ok: false, error: "Workspace não encontrado." } };
-  return { workspace };
-}
 
 // RLS rejects an owner from outside the workspace with 42501.
 function writeError(code: string | undefined) {

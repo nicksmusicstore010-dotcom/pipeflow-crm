@@ -59,7 +59,10 @@ src/
     deal-stages.ts          # ordem, rótulos e cores das etapas do pipeline (fonte única)
     lead-status.ts          # status dos leads: ordem, rótulos e cores (fonte única)
     leads.ts                # consultas de leads (listagem com filtros/paginação, detalhe)
+    deals.ts                # consultas de negócios (board, negócios do lead, resumo do pipeline)
     validations/            # schemas Zod compartilhados entre formulário e Server Action
+    action-result.ts        # tipo de retorno das Server Actions ({ ok: true } | ActionFailure)
+    action-workspace.ts     # resolveWorkspace(): sessão + workspace do slug, para Server Actions
     action-feedback.ts      # toast de erro de Server Action (sessão expirada, sem conexão)
     utils.ts                # cn(), formatCurrency(), formatDate(), initials()
   actions/                  # Server Actions por domínio (leads.ts, deals.ts, activities.ts, workspaces.ts...)
@@ -112,6 +115,8 @@ Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `
 
 ### Kanban
 - Drag-and-drop com @dnd-kit; atualização otimista na UI e persistência de `stage` + `position` via Server Action; reverter se falhar.
+- `stage` e `position` só mudam pela RPC `move_deal()` (renumera as colunas numa transação); clientes não têm update direto nessas colunas.
+- `due_date` é `date` (dia do calendário, não instante): formatar com `formatDay()`, nunca via `new Date()`.
 
 ## Identidade visual
 

@@ -1,7 +1,8 @@
-/**
- * Pipeline stages in board order — single source of truth for labels and colors.
- * Mirrors the `deal_stage` enum that milestone 4 adds to the database.
- */
+import type { Enums } from "@/types/database";
+
+export type DealStage = Enums<"deal_stage">;
+
+/** Pipeline stages in board order — single source of truth for labels and colors. */
 export const DEAL_STAGES = [
   "new_lead",
   "contacted",
@@ -9,9 +10,14 @@ export const DEAL_STAGES = [
   "negotiation",
   "won",
   "lost",
-] as const;
+] as const satisfies readonly DealStage[];
 
-export type DealStage = (typeof DEAL_STAGES)[number];
+/** Closed deals: no deadline warnings, and they don't count as open pipeline. */
+export const CLOSED_STAGES: readonly DealStage[] = ["won", "lost"];
+
+export function isDealStage(value: unknown): value is DealStage {
+  return typeof value === "string" && (DEAL_STAGES as readonly string[]).includes(value);
+}
 
 type StageStyle = {
   label: string;

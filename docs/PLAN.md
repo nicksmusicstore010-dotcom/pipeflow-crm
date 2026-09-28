@@ -9,7 +9,7 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 | 1 | Fundação | ✅ |
 | 2 | Workspaces (multiempresa) | ✅ |
 | 3 | Leads | ✅ |
-| 4 | Pipeline Kanban | ⬜ (base visual pronta) |
+| 4 | Pipeline Kanban | ✅ |
 | 5 | Atividades | ⬜ |
 | 6 | Dashboard | ⬜ |
 | 7 | Colaboração e permissões | ⬜ |
@@ -115,18 +115,28 @@ Branch: `feat/m3-leads`
 
 ---
 
-## 4. Pipeline Kanban ⬜
+## 4. Pipeline Kanban ✅
 
-- [ ] Migration: enum `deal_stage` e tabela `deals` (title, value_cents, lead_id, owner_id, due_date, stage, position) + RLS
-- [x] Helpers `formatCurrency` (centavos → BRL) e `formatDate` em `src/lib/utils.ts` (feito no esqueleto visual)
-- [x] Board com 6 colunas (Novo Lead → Fechado Ganho/Perdido), com a cor de cada etapa — `KanbanColumn` + `lib/deal-stages.ts` (colunas vazias; os cards chegam com os negócios)
-- [ ] Card: título, valor, lead, responsável (avatar), prazo (âmbar se próximo, vermelho se vencido)
-- [ ] Drag-and-drop com @dnd-kit entre colunas e dentro da coluna
-- [ ] Persistência de `stage` + `position` via Server Action, com atualização otimista e reversão em caso de erro
-- [ ] Criar/editar negócio em dialog; total de valor por coluna
+Branch: `feat/m4-pipeline`
+
+- [x] Migration `20260925180000_deals.sql`: enum `deal_stage` e tabela `deals` (title, value_cents `bigint` em centavos, lead_id, owner_id, due_date `date`, stage, position) + índices; RLS (membros fazem CRUD; responsável precisa ser membro); lead garantido no mesmo workspace por FK composta `(lead_id, workspace_id)` — excluir o lead mantém o negócio, só desvincula. Aplicada no remoto; tipos regenerados
+- [x] `stage`/`position` só mudam pela RPC `move_deal()` (sem grant de update direto): renumera a coluna de origem e a de destino numa transação, com lock por workspace contra movimentos simultâneos; novos negócios entram no fim da coluna (trigger)
+- [x] Helpers `formatCurrency` (centavos → BRL) e `formatDate` em `src/lib/utils.ts` (feito no esqueleto visual); novos `formatDay`, `todaySaoPaulo`, `daysBetween`, `parseMoneyToCents`, `formatMoneyInput`
+- [x] Board com 6 colunas (Novo Lead → Fechado Ganho/Perdido), com a cor de cada etapa, quantidade e total em R$ por coluna
+- [x] Card: título, valor, lead, responsável (avatar), prazo (âmbar se vence em até 3 dias, vermelho se vencido; sem cor em negócios fechados)
+- [x] Drag-and-drop com @dnd-kit entre colunas e dentro da coluna — mouse, toque (segurar para arrastar, deslizar continua rolando o board) e teclado (espaço + setas; Enter abre o card), com anúncios em pt-BR para leitores de tela
+- [x] Persistência de `stage` + `position` via Server Action `moveDeal`, com atualização otimista e reversão (+ aviso) em caso de erro
+- [x] Criar/editar/excluir negócio em dialog (valor digitado como "1.500,00"); clicar no card abre a edição; "Adicionar" em cada coluna já escolhe a etapa; mudar a etapa pelo formulário leva o card para o fim da coluna
+- [x] Seção "Negócios" no detalhe do lead, com "Novo negócio" já vinculado ao lead
+- [x] Dashboard: "Negócios abertos" e "Valor do pipeline" com dados reais (o resto das métricas é o milestone 6)
 - [x] Rolagem horizontal no mobile (verificada em 390px: o board rola dentro do container, a página não)
 
-**Pronto quando:** mover um card persiste após recarregar a página, e um erro no servidor devolve o card à posição original.
+**Verificação (25/09/2026):**
+- [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
+- [x] Migration + RLS testadas em transação com rollback antes do `db push` (13 checagens: posições do trigger, `created_by`, não insere em outro workspace, lead de outro workspace rejeitado pela FK, responsável de fora rejeitado, `stage`/`position`/`workspace_id` sem update direto, `move_deal` reordena para cima/baixo e entre colunas com índice fora do intervalo, não move negócio alheio, excluir lead desvincula, valor negativo rejeitado, anônimo bloqueado)
+- [x] Ponta a ponta no navegador (Playwright + Edge, build de produção, 47 checagens, usuários de teste apagados depois): estado vazio, validação, criar/editar/excluir, cores de prazo, reordenar e mover entre colunas **persistindo após recarregar**, posições no banco sem buracos, teclado, **falha de rede e negócio excluído por outra pessoa devolvem/removem o card com aviso**, seção no lead, lead excluído mantém o negócio, números do dashboard, isolamento entre workspaces, mobile, tema claro, sem erros no console
+
+**Pronto quando:** mover um card persiste após recarregar a página, e um erro no servidor devolve o card à posição original. ✅
 
 ---
 
@@ -143,7 +153,7 @@ Branch: `feat/m3-leads`
 
 ## 6. Dashboard ⬜
 
-- [ ] Cards: total de leads, negócios abertos, valor total do pipeline, taxa de conversão (ganhos ÷ fechados) — componente `StatCard` pronto, já no Dashboard com valores zerados; falta ligar aos dados
+- [ ] Cards: total de leads, negócios abertos, valor total do pipeline, taxa de conversão (ganhos ÷ fechados) — total de leads, negócios abertos e valor do pipeline já ligados aos dados; falta a taxa de conversão
 - [ ] Gráfico de funil por etapa com Recharts
 - [ ] Lista "Meus negócios com prazo próximo" (usuário logado, próximos 7 dias + vencidos)
 - [ ] Consultas agregadas no servidor (views ou funções SQL se necessário)
