@@ -71,7 +71,8 @@ Branch: `feat/supabase-core`
 - [x] `.env.example`, README (tabela das chaves) e CLAUDE.md documentando a chave secreta e onde ela pode ser usada
 - [x] `npm run check:keys` (`scripts/check-supabase-keys.mjs`): confere as chaves sem imprimi-las — publicável conecta e o RLS bloqueia o anônimo; secreta conecta e ignora o RLS; alerta se uma chave secreta tiver prefixo `NEXT_PUBLIC_`
 - [x] `SUPABASE_SECRET_KEY` no `.env.local`; `npm run check:keys` passou (publicável bloqueada pelo RLS, secreta conecta e ignora o RLS)
-- [ ] `SUPABASE_SECRET_KEY` na Vercel (Settings > Environment Variables) — feito pelo usuário
+- [x] `SUPABASE_SECRET_KEY` na Vercel, projeto `pipeflow-crm` (Production, Preview e Development, tipo *sensitive*), via Vercel CLI com a pasta ligada ao projeto (`.vercel/`, já no `.gitignore`). Vale a partir do próximo deploy
+- [ ] Existem 4 projetos na Vercel fazendo deploy do mesmo repo (`pipeflow-crm`, `pipeflow-crm-czaz`, `pipeflow`, `pipeflow-crm-1`); só o `pipeflow-crm` tem a chave secreta — apagar os duplicados
 - [x] `client.ts` (navegador) como singleton lazy: criado na primeira chamada, não no import, e reaproveitado — uma sessão e um conjunto de listeners por aba
 - [x] `server.ts`: `createClient()` async (`await cookies()`), um client por request; as 29 chamadas em actions, `lib/` e `/auth/callback` passaram a usar `await createClient()` — já no formato exigido pelo Next 15
 - [x] `.env.local` confirmado no `.gitignore` (regra `.env*.local`) e nunca versionado
