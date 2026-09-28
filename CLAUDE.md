@@ -24,6 +24,7 @@ O PRD completo está em [docs/PRD.md](docs/PRD.md) — consulte-o antes de imple
 npm run dev          # servidor local
 npm run build        # build de produção
 npm run lint         # ESLint
+npm run check:keys   # confere as chaves do Supabase no .env.local (sem imprimi-las)
 npx tsc --noEmit     # checagem de tipos
 npx supabase db push                                                   # aplicar migrations no projeto linkado
 npx supabase gen types typescript --linked > src/types/database.ts  # regenerar tipos do banco
@@ -105,7 +106,7 @@ Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `
 
 ### Dados e segurança
 - **Toda tabela de dados de negócio tem `workspace_id` e RLS habilitado.** Policies checam a participação do usuário via `workspace_members`. Nunca confiar em filtro só no cliente.
-- O client com service role (`lib/supabase/admin.ts`) só é usado em webhooks e jobs de servidor — nunca em código que roda no browser.
+- O client com a chave secreta (`createAdminClient()` em `lib/supabase/admin.ts`, env `SUPABASE_SECRET_KEY`) ignora o RLS: só em webhooks e jobs de servidor, sempre filtrando por `workspace_id`. Ele importa `server-only` (importar no browser quebra o build); a env nunca leva prefixo `NEXT_PUBLIC_`.
 - Mudanças de schema sempre como nova migration em `supabase/migrations/`; nunca editar migrations já aplicadas.
 - Valores monetários armazenados em **centavos (integer)** e formatados como BRL (`R$ 1.234,56`) só na exibição.
 - Datas em `timestamptz` (UTC) no banco; exibição em `America/Sao_Paulo`, formato `dd/MM/yyyy`.

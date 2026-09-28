@@ -12,3 +12,20 @@ export function getSupabaseEnv() {
 
   return { url, key };
 }
+
+/**
+ * Secret key (bypasses RLS). Server-only: never prefix it with NEXT_PUBLIC_.
+ * Read lazily so the app still boots without it; only admin code needs it.
+ */
+export function getSupabaseSecretKey() {
+  // Older projects and the Vercel integration use the legacy SERVICE_ROLE_KEY name.
+  const key = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!key) {
+    throw new Error(
+      "Missing SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY). Copy it from Supabase dashboard > Project Settings > API Keys > Secret keys into .env.local.",
+    );
+  }
+
+  return key;
+}

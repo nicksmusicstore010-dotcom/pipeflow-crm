@@ -62,6 +62,22 @@ Branch: `feat/m1-fundacao` · commit inicial `826bc99`
 - [x] Integração Supabase ↔ GitHub (diretório de trabalho `.`)
 - [x] Merge na `main` (24/09/2026, `49e3ed5`): milestone 2 + esqueleto visual + correção da confirmação de e-mail. Sem PR — o GitHub CLI (`gh`) ainda não está autenticado nesta máquina
 
+**Supabase core — chaves (aula 3.1, 28/09/2026):**
+
+Branch: `feat/supabase-core`
+
+- [x] `src/lib/supabase/admin.ts`: `createAdminClient()` com a chave secreta (ignora o RLS, sem sessão), tipado com `Database`; importa `server-only`
+- [x] `getSupabaseSecretKey()` em `env.ts`: lê `SUPABASE_SECRET_KEY` (ou o nome antigo `SUPABASE_SERVICE_ROLE_KEY`) só quando o admin é usado — o app sobe sem ela
+- [x] `.env.example`, README (tabela das chaves) e CLAUDE.md documentando a chave secreta e onde ela pode ser usada
+- [x] `npm run check:keys` (`scripts/check-supabase-keys.mjs`): confere as chaves sem imprimi-las — publicável conecta e o RLS bloqueia o anônimo; secreta conecta e ignora o RLS; alerta se uma chave secreta tiver prefixo `NEXT_PUBLIC_`
+- [ ] Colar `SUPABASE_SECRET_KEY` no `.env.local` e na Vercel (Settings > Environment Variables) — feito pelo usuário; depois rodar `npm run check:keys`
+
+**Verificação (28/09/2026):**
+- [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
+- [x] Componente de cliente temporário importando `admin.ts` → build falha com o erro do `server-only` (arquivo removido depois)
+- [x] Bundle do navegador (`static/`) sem nenhuma referência a `SUPABASE_SECRET_KEY`, `sb_secret` ou `createAdminClient`
+- [x] `npm run check:keys`: chave publicável ok e RLS bloqueando o anônimo; chave secreta pendente
+
 ---
 
 ## 2. Workspaces (multiempresa) ✅
