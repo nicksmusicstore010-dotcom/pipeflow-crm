@@ -29,7 +29,7 @@ export async function createLead(workspaceSlug: string, input: unknown): Promise
   if ("error" in resolved) return resolved.error;
   const { workspace } = resolved;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("leads")
     .insert({ ...toLeadRow(parsed.data), workspace_id: workspace.id })
@@ -55,7 +55,7 @@ export async function updateLead(
   if ("error" in resolved) return resolved.error;
   const { workspace } = resolved;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("leads")
     .update(toLeadRow(parsed.data))
@@ -77,7 +77,7 @@ export async function deleteLead(workspaceSlug: string, leadId: string): Promise
   if ("error" in resolved) return resolved.error;
   const { workspace } = resolved;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("leads")
     .delete()
@@ -99,7 +99,7 @@ export async function createSampleLeads(workspaceSlug: string): Promise<ActionRe
   const { workspace } = resolved;
   const user = await getCurrentUser();
 
-  const supabase = createClient();
+  const supabase = await createClient();
   // Only for an empty workspace: a second click (or another tab) must not duplicate them.
   const { count, error: countError } = await supabase
     .from("leads")

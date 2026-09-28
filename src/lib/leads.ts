@@ -72,7 +72,7 @@ function normalizeSearch(text: string) {
 
 /** One page of leads matching the filters, newest first, plus the total count. */
 export async function listLeads(workspaceId: string, filters: LeadFilters) {
-  const supabase = createClient();
+  const supabase = await createClient();
   let query = supabase
     .from("leads")
     .select("*", { count: "exact" })
@@ -109,7 +109,7 @@ export async function listLeads(workspaceId: string, filters: LeadFilters) {
 export const getLead = cache(async (workspaceId: string, leadId: string) => {
   if (!z.uuid().safeParse(leadId).success) return null;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("leads")
     .select("*")
@@ -122,7 +122,7 @@ export const getLead = cache(async (workspaceId: string, leadId: string) => {
 
 /** Number of leads in a workspace (head-only count, no rows transferred). */
 export async function countLeads(workspaceId: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { count, error } = await supabase
     .from("leads")
     .select("id", { count: "exact", head: true })

@@ -12,7 +12,7 @@ export type Deal = Pick<
 
 /** Every deal of the workspace in board order (stage, then position inside the column). */
 export async function listDeals(workspaceId: string): Promise<Deal[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("deals")
     .select(DEAL_COLUMNS)
@@ -26,7 +26,7 @@ export async function listDeals(workspaceId: string): Promise<Deal[]> {
 
 /** Deals linked to one lead, newest first (lead detail page). */
 export async function listLeadDeals(workspaceId: string, leadId: string): Promise<Deal[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("deals")
     .select(DEAL_COLUMNS)
@@ -41,7 +41,7 @@ export type LeadOption = { id: string; name: string };
 
 /** Leads to pick from in the deal form, alphabetically. */
 export async function listLeadOptions(workspaceId: string): Promise<LeadOption[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("leads")
     .select("id, name")
@@ -54,7 +54,7 @@ export async function listLeadOptions(workspaceId: string): Promise<LeadOption[]
 
 /** Open deals (not won/lost): how many and their total value in cents. */
 export async function openPipelineSummary(workspaceId: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("deals")
     .select("value_cents")

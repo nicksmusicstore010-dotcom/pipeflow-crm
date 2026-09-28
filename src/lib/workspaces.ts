@@ -13,7 +13,7 @@ export const getUserWorkspaces = cache(async (): Promise<WorkspaceSummary[]> => 
   const user = await getCurrentUser();
   if (!user) return [];
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("workspace_members")
     .select("role, workspace:workspaces(id, name, slug, plan)")
@@ -34,7 +34,7 @@ export type WorkspaceMember = { id: string; name: string };
 
 /** Members of a workspace with their display names, alphabetically. */
 export const getWorkspaceMembers = cache(async (workspaceId: string): Promise<WorkspaceMember[]> => {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("workspace_members")
     .select("user_id, profile:profiles(full_name)")

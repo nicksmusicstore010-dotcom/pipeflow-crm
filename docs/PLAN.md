@@ -72,12 +72,16 @@ Branch: `feat/supabase-core`
 - [x] `npm run check:keys` (`scripts/check-supabase-keys.mjs`): confere as chaves sem imprimi-las — publicável conecta e o RLS bloqueia o anônimo; secreta conecta e ignora o RLS; alerta se uma chave secreta tiver prefixo `NEXT_PUBLIC_`
 - [x] `SUPABASE_SECRET_KEY` no `.env.local`; `npm run check:keys` passou (publicável bloqueada pelo RLS, secreta conecta e ignora o RLS)
 - [ ] `SUPABASE_SECRET_KEY` na Vercel (Settings > Environment Variables) — feito pelo usuário
+- [x] `client.ts` (navegador) como singleton lazy: criado na primeira chamada, não no import, e reaproveitado — uma sessão e um conjunto de listeners por aba
+- [x] `server.ts`: `createClient()` async (`await cookies()`), um client por request; as 29 chamadas em actions, `lib/` e `/auth/callback` passaram a usar `await createClient()` — já no formato exigido pelo Next 15
+- [x] `.env.local` confirmado no `.gitignore` (regra `.env*.local`) e nunca versionado
 
 **Verificação (28/09/2026):**
 - [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
 - [x] Componente de cliente temporário importando `admin.ts` → build falha com o erro do `server-only` (arquivo removido depois)
 - [x] Bundle do navegador (`static/`) sem nenhuma referência a `SUPABASE_SECRET_KEY`, `sb_secret` ou `createAdminClient`
 - [x] `npm run check:keys`: as duas chaves ok
+- [x] Clients: `tsc`, `lint` e `build` sem erros; smoke test no build de produção com usuário temporário criado pelo client admin (apagado depois): `/app` → `/onboarding` sem workspace; com workspace, `/app` → dashboard e Dashboard/Leads/Pipeline/Configurações 200 lendo a sessão pelos cookies; workspace alheio → 404; `/auth/callback` com código inválido trata o erro
 
 ---
 

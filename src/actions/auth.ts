@@ -65,7 +65,7 @@ export async function login(_prev: AuthFormState, formData: FormData): Promise<A
   });
   if (!parsed.success) return { error: firstIssue(parsed.error) };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
     return {
@@ -85,7 +85,7 @@ export async function signup(_prev: AuthFormState, formData: FormData): Promise<
   });
   if (!parsed.success) return { error: firstIssue(parsed.error) };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
@@ -114,7 +114,7 @@ export async function resendConfirmation(
   const parsed = resendSchema.safeParse({ email: formData.get("email") });
   if (!parsed.success) return { error: firstIssue(parsed.error) };
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.resend({
     type: "signup",
     email: parsed.data.email,
@@ -130,7 +130,7 @@ export async function resendConfirmation(
 }
 
 export async function logout() {
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");
 }
