@@ -10,7 +10,7 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 | 2 | Workspaces (multiempresa) | ✅ |
 | 3 | Leads | ✅ |
 | 4 | Pipeline Kanban | ✅ |
-| 5 | Atividades | ⬜ |
+| 5 | Atividades | ✅ |
 | 6 | Dashboard | ⬜ |
 | 7 | Colaboração e permissões | ⬜ |
 | 8 | Monetização (Stripe) | ⬜ |
@@ -146,14 +146,22 @@ Branch: `feat/m4-pipeline`
 
 ---
 
-## 5. Atividades ⬜
+## 5. Atividades ✅
 
-- [ ] Migration: enum `activity_type` (`call`, `email`, `meeting`, `note`) e tabela `activities` + RLS
-- [ ] Formulário de nova atividade no detalhe do lead (tipo, descrição, data)
-- [ ] Timeline cronológica com ícone por tipo, autor e data — componente `LeadTimeline` já no detalhe do lead (hoje com cadastro, negócios e edição); falta incluir as atividades
-- [ ] Editar e excluir (apenas o autor ou um admin)
+Branch: `feat/m5-atividades`
 
-**Pronto quando:** as atividades aparecem na timeline do lead em ordem cronológica, com o autor correto.
+- [x] Migration `20260928150000_activities.sql`: enum `activity_type` (`call`, `email`, `meeting`, `note`) e tabela `activities` (lead_id, author_id, type, description, occurred_at) + RLS; lead garantido no mesmo workspace por FK composta (excluir o lead apaga o histórico dele); `author_id` sempre `auth.uid()` (sem grant de insert/update); qualquer membro registra, só o autor ou um admin edita/exclui. Aplicada no remoto; tipos regenerados
+- [x] Formulário de nova atividade no detalhe do lead: tipo (Ligação/E-mail/Reunião/Nota, com dica de texto por tipo), descrição (até 2000 caracteres, quebras de linha mantidas), data e hora de São Paulo — se o campo não for alterado, vale a hora em que se clica em "Registrar"
+- [x] Timeline cronológica com ícone e cor por tipo, autor e data/hora (`LeadTimeline`, junto com cadastro do lead, negócios e edição); atividade com data futura aparece como "Agendada"
+- [x] Editar e excluir (apenas o autor ou um admin) pelo menu "⋯" de cada atividade; o servidor distingue "atividade excluída" de "sem permissão"
+- [x] Tipos, rótulos, ícones e cores em `src/lib/activity-types.ts`; schema Zod compartilhado em `src/lib/validations/activity.ts`
+
+**Verificação (28/09/2026):**
+- [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
+- [x] Migration + RLS testadas em transação com rollback antes do `db push` (14 checagens: autor = usuário logado, não insere em outro workspace, lead de outro workspace rejeitado, `author_id` e `lead_id` sem escrita, descrição em branco rejeitada, autor edita a própria, outro membro lê mas não edita/exclui, outro workspace não vê nada, admin edita/exclui a de outro sem mudar o autor, excluir lead apaga o histórico, anônimo bloqueado)
+- [x] Ponta a ponta no navegador (Playwright + Edge, build de produção, 25 checagens, 2 usuários, apagados depois): validações, registrar os 4 tipos, ordem cronológica com passado e futuro ("Agendada"), página aberta há 40 min grava a hora do clique, editar, permissões de membro × admin na interface, admin exclui atividade de membro, excluir lead apaga o histórico, mobile, tema claro, sem erros no console. Suites anteriores de novo: leads (45) e pipeline (47)
+
+**Pronto quando:** as atividades aparecem na timeline do lead em ordem cronológica, com o autor correto. ✅
 
 ---
 

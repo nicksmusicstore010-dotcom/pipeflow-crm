@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Building2, Briefcase, Mail, Pencil, Phone } from "lucide-react";
 
+import { ActivityForm } from "@/components/activities/activity-form";
 import { PageHeader } from "@/components/layout/page-header";
 import { DeleteLeadButton } from "@/components/leads/delete-lead-button";
 import { LeadFormDialog } from "@/components/leads/lead-form-dialog";
@@ -12,6 +13,7 @@ import { LeadDeals } from "@/components/pipeline/lead-deals";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { listLeadActivities } from "@/lib/activities";
 import { listLeadDeals, listLeadOptions } from "@/lib/deals";
 import { getLead } from "@/lib/leads";
 import { getCurrentUser } from "@/lib/session";
@@ -37,10 +39,11 @@ export default async function LeadDetailPage({ params }: { params: Params }) {
   if (!data || !user) notFound();
   const { workspace, lead } = data;
 
-  const [members, deals, leadOptions] = await Promise.all([
+  const [members, deals, leadOptions, activities] = await Promise.all([
     getWorkspaceMembers(workspace.id),
     listLeadDeals(workspace.id, lead.id),
     listLeadOptions(workspace.id),
+    listLeadActivities(workspace.id, lead.id),
   ]);
   const ownerName = members.find((m) => m.id === lead.owner_id)?.name;
   const subtitle = [lead.position, lead.company].filter(Boolean).join(" · ");
@@ -147,12 +150,21 @@ export default async function LeadDetailPage({ params }: { params: Params }) {
             currentUserId={user.id}
             today={todaySaoPaulo()}
           />
-          <section>
-            <h2 className="mb-3 text-base font-semibold">Histórico</h2>
-            <LeadTimeline lead={lead} deals={deals} memberNames={new Map(members.map((m) => [m.id, m.name]))} />
-            <p className="mt-2 text-xs text-muted-foreground">
-              Em breve você poderá registrar ligações, e-mails, reuniões e notas aqui.
-            </p>
+          <section className="space-y-3">
+            <h2 className="text-base font-semibold">Atividades</h2>
+            <Card className="rounded-lg p-5 shadow-sm">
+              <ActivityForm workspaceSlug={workspace.slug} leadId={lead.id} />
+            </Card>
+            <LeadTimeline
+              workspaceSlug={workspace.slug}
+              lead={lead}
+              deals={deals}
+              activities={activities}
+              memberNames={new Map(members.map((m) => [m.id, m.name]))}
+              currentUserId={user.id}
+              isAdmin={workspace.role === "admin"}
+              now={Date.now()}
+            />
           </section>
         </div>
       </div>

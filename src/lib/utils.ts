@@ -98,3 +98,25 @@ export function parseMoneyToCents(input: string) {
 export function formatMoneyInput(cents: number) {
   return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cents / 100)
 }
+
+const saoPauloParts = new Intl.DateTimeFormat("en-CA", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZone: "America/Sao_Paulo",
+})
+
+/** A timestamptz (default: now) as "yyyy-MM-ddTHH:mm" in São Paulo, for `<input type="datetime-local">`. */
+export function toSaoPauloInput(value: string | Date = new Date()) {
+  const parts = saoPauloParts.formatToParts(typeof value === "string" ? new Date(value) : value)
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? ""
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`
+}
+
+/** "yyyy-MM-ddTHH:mm" typed in São Paulo (fixed UTC-3, no DST since 2019) → ISO string in UTC. */
+export function fromSaoPauloInput(local: string) {
+  return new Date(`${local}:00-03:00`).toISOString()
+}
