@@ -62,6 +62,42 @@ Branch: `feat/m1-fundacao` · commit inicial `826bc99`
 - [x] Integração Supabase ↔ GitHub (diretório de trabalho `.`)
 - [x] Merge na `main` (24/09/2026, `49e3ed5`): milestone 2 + esqueleto visual + correção da confirmação de e-mail. Sem PR — o GitHub CLI (`gh`) ainda não está autenticado nesta máquina
 
+**Supabase core — chaves (aula 3.1, 28/09/2026):**
+
+Branch: `feat/supabase-core`
+
+- [x] `src/lib/supabase/admin.ts`: `createAdminClient()` com a chave secreta (ignora o RLS, sem sessão), tipado com `Database`; importa `server-only`
+- [x] `getSupabaseSecretKey()` em `env.ts`: lê `SUPABASE_SECRET_KEY` (ou o nome antigo `SUPABASE_SERVICE_ROLE_KEY`) só quando o admin é usado — o app sobe sem ela
+- [x] `.env.example`, README (tabela das chaves) e CLAUDE.md documentando a chave secreta e onde ela pode ser usada
+- [x] `npm run check:keys` (`scripts/check-supabase-keys.mjs`): confere as chaves sem imprimi-las — publicável conecta e o RLS bloqueia o anônimo; secreta conecta e ignora o RLS; alerta se uma chave secreta tiver prefixo `NEXT_PUBLIC_`
+- [x] `SUPABASE_SECRET_KEY` no `.env.local`; `npm run check:keys` passou (publicável bloqueada pelo RLS, secreta conecta e ignora o RLS)
+- [x] `SUPABASE_SECRET_KEY` na Vercel, projeto `pipeflow-crm` (Production, Preview e Development, tipo *sensitive*), via Vercel CLI com a pasta ligada ao projeto (`.vercel/`, já no `.gitignore`). Vale a partir do próximo deploy
+- [ ] Existem 4 projetos na Vercel fazendo deploy do mesmo repo (`pipeflow-crm`, `pipeflow-crm-czaz`, `pipeflow`, `pipeflow-crm-1`); só o `pipeflow-crm` tem a chave secreta — apagar os duplicados
+- [x] `client.ts` (navegador) como singleton lazy: criado na primeira chamada, não no import, e reaproveitado — uma sessão e um conjunto de listeners por aba
+- [x] `server.ts`: `createClient()` async (`await cookies()`), um client por request; as 29 chamadas em actions, `lib/` e `/auth/callback` passaram a usar `await createClient()` — já no formato exigido pelo Next 15
+- [x] `.env.local` confirmado no `.gitignore` (regra `.env*.local`) e nunca versionado
+
+**Verificação (28/09/2026):**
+- [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
+- [x] Componente de cliente temporário importando `admin.ts` → build falha com o erro do `server-only` (arquivo removido depois)
+- [x] Bundle do navegador (`static/`) sem nenhuma referência a `SUPABASE_SECRET_KEY`, `sb_secret` ou `createAdminClient`
+- [x] `npm run check:keys`: as duas chaves ok
+- [x] Clients: `tsc`, `lint` e `build` sem erros; smoke test no build de produção com usuário temporário criado pelo client admin (apagado depois): `/app` → `/onboarding` sem workspace; com workspace, `/app` → dashboard e Dashboard/Leads/Pipeline/Configurações 200 lendo a sessão pelos cookies; workspace alheio → 404; `/auth/callback` com código inválido trata o erro
+
+**Migrations & segurança RLS (aula 3.2, 29/09/2026):**
+
+`workspaces`, `workspace_members`, `leads`, `deals` e `activities` já existiam (milestones 2–5, aplicadas no remoto). Nesta aula:
+
+- [x] Migration `20260929120000_subscriptions.sql`: enum `subscription_status` e tabela `subscriptions` (id = `sub_...` do Stripe, workspace_id, stripe_customer_id, stripe_price_id, status, current_period_end, cancel_at_period_end, canceled_at). RLS: só admins do workspace leem; clientes não têm insert/update/delete — só o webhook (chave secreta) grava. `workspaces.plan` continua sendo o campo dos limites
+- [x] Revisão do RLS com `supabase db advisors`: migration `20260929120100_rls_function_grants.sql` tira o `EXECUTE` do `anon` nas funções `SECURITY DEFINER` de apoio às policies e de todos em `handle_new_user()` (trigger); `is_user_in_workspace(ws, user)` deixava qualquer usuário logado descobrir se um usuário X é membro de um workspace Y via `/rest/v1/rpc` — agora só responde para workspaces dos quais quem pergunta é membro
+- [x] Tipos regenerados em `src/types/database.ts`; `src/types/supabase.ts` com os nomes das linhas (`Workspace`, `Lead`, `Deal`, `Activity`, `Subscription`...)
+- [ ] Ativar "Leaked password protection" no Auth do Supabase (último aviso de segurança dos advisors; configuração do dashboard, disponível no plano Pro do Supabase)
+
+**Verificação (29/09/2026):**
+- [x] Migrations + RLS testadas em transação com rollback antes do `db push` (19 checagens: trigger de profiles, id `sub_` obrigatório, admin lê a assinatura do próprio workspace mas não insere/altera/exclui, membro não admin não lê, outro workspace não lê assinatura/leads/workspace, `is_user_in_workspace` não vaza membros de outro workspace, responsável de lead continua validado, anônimo sem acesso à tabela e às funções). Rodada de controle sem a correção: 4 falhas, entre elas o vazamento de membros
+- [x] Após o `db push`: as 7 tabelas do `public` com RLS ativo (activities 4 policies, deals 4, leads 4, profiles 2, subscriptions 1, workspace_members 1, workspaces 2); advisors sem avisos de `anon`
+- [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
+
 ---
 
 ## 2. Workspaces (multiempresa) ✅
@@ -193,7 +229,7 @@ Branch: `feat/m5-atividades`
 - [ ] `src/lib/plans.ts` com os limites (Free: 2 colaboradores, 50 leads; Pro: ilimitado, R$ 49/mês)
 - [ ] Checagem dos limites no servidor ao criar lead e convidar membro; aviso + CTA de upgrade na UI
 - [ ] Produto e preço no Stripe; Server Action que cria a sessão do Stripe Checkout
-- [ ] Webhook `/api/webhooks/stripe` (assinatura verificada): `checkout.session.completed`, `customer.subscription.updated/deleted` → atualiza `workspaces.plan`
+- [ ] Webhook `/api/webhooks/stripe` (assinatura verificada): `checkout.session.completed`, `customer.subscription.updated/deleted` → grava em `subscriptions` (tabela criada na aula 3.2) e atualiza `workspaces.plan`
 - [ ] Botão para o Customer Portal (gerenciar/cancelar)
 - [ ] Página de Billing em Configurações com o plano atual e o uso
 

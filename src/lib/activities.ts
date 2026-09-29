@@ -8,7 +8,7 @@ export type Activity = Pick<
 
 /** A lead's activities, most recent first. */
 export async function listLeadActivities(workspaceId: string, leadId: string): Promise<Activity[]> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("activities")
     .select("id, lead_id, author_id, type, description, occurred_at, created_at")

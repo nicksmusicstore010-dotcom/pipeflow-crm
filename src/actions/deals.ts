@@ -41,7 +41,7 @@ export async function createDeal(workspaceSlug: string, input: unknown): Promise
   const { workspace } = resolved;
 
   // New deals go to the bottom of their column (insert trigger).
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("deals")
     .insert({ ...toDealRow(parsed.data), stage: parsed.data.stage, workspace_id: workspace.id })
@@ -62,7 +62,7 @@ export async function updateDeal(workspaceSlug: string, dealId: string, input: u
   if ("error" in resolved) return resolved.error;
   const { workspace } = resolved;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("deals")
     .update(toDealRow(parsed.data))
@@ -97,7 +97,7 @@ export async function deleteDeal(workspaceSlug: string, dealId: string): Promise
   if ("error" in resolved) return resolved.error;
   const { workspace } = resolved;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("deals")
     .delete()
@@ -123,7 +123,7 @@ export async function moveDeal(
   const resolved = await resolveWorkspace(workspaceSlug);
   if ("error" in resolved) return resolved.error;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.rpc("move_deal", {
     p_deal_id: parsed.data.dealId,
     p_stage: parsed.data.stage,

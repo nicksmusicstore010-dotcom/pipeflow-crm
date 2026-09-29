@@ -265,6 +265,53 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          canceled_at: string | null
+          created_at: string
+          current_period_end: string | null
+          id: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string
+          stripe_price_id: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          id: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string
+          stripe_price_id?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string
+          stripe_price_id?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_members: {
         Row: {
           created_at: string
@@ -397,6 +444,15 @@ export type Database = {
         | "qualified"
         | "unqualified"
         | "customer"
+      subscription_status:
+        | "trialing"
+        | "active"
+        | "past_due"
+        | "unpaid"
+        | "canceled"
+        | "incomplete"
+        | "incomplete_expired"
+        | "paused"
       workspace_plan: "free" | "pro"
       workspace_role: "admin" | "member"
     }
@@ -539,6 +595,16 @@ export const Constants = {
         "lost",
       ],
       lead_status: ["new", "contacted", "qualified", "unqualified", "customer"],
+      subscription_status: [
+        "trialing",
+        "active",
+        "past_due",
+        "unpaid",
+        "canceled",
+        "incomplete",
+        "incomplete_expired",
+        "paused",
+      ],
       workspace_plan: ["free", "pro"],
       workspace_role: ["admin", "member"],
     },

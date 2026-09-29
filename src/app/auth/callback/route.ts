@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type") as EmailOtpType | null;
   const code = searchParams.get("code");
   const next = safeNextPath(searchParams.get("next"));
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const fail = (reason: string) => NextResponse.redirect(`${origin}/login?error=${reason}`);
 

@@ -29,7 +29,7 @@ function revalidateLead(slug: string, leadId: string) {
  * by checking whether the member can still see it.
  */
 async function missingOrForbidden(activityId: string, workspaceId: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase
     .from("activities")
     .select("id")
@@ -53,7 +53,7 @@ export async function createActivity(
   const { workspace } = resolved;
 
   // The author is the logged-in user (column default + RLS check).
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("activities")
     .insert({ ...toRow(parsed.data), lead_id: leadId, workspace_id: workspace.id })
@@ -82,7 +82,7 @@ export async function updateActivity(
   if ("error" in resolved) return resolved.error;
   const { workspace } = resolved;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("activities")
     .update(toRow(parsed.data))
@@ -104,7 +104,7 @@ export async function deleteActivity(workspaceSlug: string, activityId: string):
   if ("error" in resolved) return resolved.error;
   const { workspace } = resolved;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("activities")
     .delete()

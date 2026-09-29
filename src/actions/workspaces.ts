@@ -29,7 +29,7 @@ export async function createWorkspace(
   if (!(await getCurrentUser())) return { error: "Sua sessão expirou. Recarregue a página e entre novamente." };
 
   // create_workspace() inserts the workspace and the caller as admin atomically.
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc("create_workspace", {
     p_name: parsed.data.name,
     p_slug: workspaceSlugFor(parsed.data.name),
