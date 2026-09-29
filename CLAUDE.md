@@ -73,6 +73,7 @@ src/
   hooks/
   types/
     database.ts             # tipos gerados pelo Supabase
+    supabase.ts             # nomes das linhas de cada tabela (Workspace, Lead, Subscription...) a partir de database.ts
 supabase/
   migrations/               # SQL versionado (schema + RLS + policies)
   seed.sql
@@ -90,6 +91,7 @@ docs/
 - `leads` — workspace_id, name, email, phone, company, position, status, owner_id
 - `deals` — workspace_id, lead_id, title, value_cents, stage, owner_id, due_date, position
 - `activities` — workspace_id, lead_id, author_id, type (`call` | `email` | `meeting` | `note`), description, occurred_at
+- `subscriptions` — id (`sub_...` do Stripe), workspace_id, stripe_customer_id, stripe_price_id, status, current_period_end, cancel_at_period_end. Só o webhook grava (chave secreta); só admins leem. `workspaces.plan` continua sendo o campo lido para os limites
 
 Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `proposal_sent` → `negotiation` → `won` | `lost`. Rótulos na UI: Novo Lead, Contato Realizado, Proposta Enviada, Negociação, Fechado Ganho, Fechado Perdido.
 
