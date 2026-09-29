@@ -51,7 +51,10 @@ export function LoginForm({
             <SubmitButton>Entrar</SubmitButton>
             <p className="text-sm text-muted-foreground">
               Não tem conta?{" "}
-              <Link href="/signup" className="font-medium text-primary hover:underline">
+              <Link
+                href={next ? `/signup?next=${encodeURIComponent(next)}` : "/signup"}
+                className="font-medium text-primary hover:underline"
+              >
                 Criar conta grátis
               </Link>
             </p>

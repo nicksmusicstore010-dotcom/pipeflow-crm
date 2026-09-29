@@ -8,9 +8,12 @@ import { cn } from "@/lib/utils";
 
 export function SidebarNav({
   workspaceSlug,
+  isAdmin,
   onNavigate,
 }: {
   workspaceSlug: string;
+  /** Members don't see admin-only items (Configurações); the page itself also checks. */
+  isAdmin: boolean;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -18,7 +21,7 @@ export function SidebarNav({
 
   return (
     <nav className="flex flex-col gap-1">
-      {NAV_ITEMS.map((item) => {
+      {NAV_ITEMS.filter((item) => isAdmin || !item.adminOnly).map((item) => {
         const { path, label, icon: Icon } = item;
         const href = `/${workspaceSlug}${path}`;
         const active = item === activeItem;

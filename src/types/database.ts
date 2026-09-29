@@ -312,6 +312,67 @@ export type Database = {
           },
         ]
       }
+      workspace_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          role: Database["public"]["Enums"]["workspace_role"]
+          token_hash: string
+          workspace_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["workspace_role"]
+          token_hash: string
+          workspace_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["workspace_role"]
+          token_hash?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_invites_accepted_by_fkey"
+            columns: ["accepted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_invites_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_members: {
         Row: {
           created_at: string
@@ -389,6 +450,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_workspace_invite: { Args: { p_token: string }; Returns: string }
       create_workspace: {
         Args: { p_name: string; p_slug: string }
         Returns: {
@@ -409,6 +471,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_workspace_invite: {
+        Args: {
+          p_email: string
+          p_role: Database["public"]["Enums"]["workspace_role"]
+          p_token: string
+          p_workspace_id: string
+        }
+        Returns: string
+      }
       deal_stage_totals: {
         Args: { p_workspace_id: string }
         Returns: {
@@ -417,6 +488,17 @@ export type Database = {
           value_cents: number
         }[]
       }
+      get_invite_preview: {
+        Args: { p_token: string }
+        Returns: {
+          email: string
+          inviter_name: string
+          role: Database["public"]["Enums"]["workspace_role"]
+          status: string
+          workspace_name: string
+        }[]
+      }
+      invite_token_hash: { Args: { p_token: string }; Returns: string }
       is_user_in_workspace: {
         Args: { p_user_id: string; p_workspace_id: string }
         Returns: boolean
@@ -426,6 +508,16 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: boolean
       }
+      list_workspace_members: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          email: string
+          full_name: string
+          joined_at: string
+          role: Database["public"]["Enums"]["workspace_role"]
+          user_id: string
+        }[]
+      }
       move_deal: {
         Args: {
           p_deal_id: string
@@ -433,6 +525,10 @@ export type Database = {
           p_stage: Database["public"]["Enums"]["deal_stage"]
         }
         Returns: undefined
+      }
+      plan_member_limit: {
+        Args: { p_plan: Database["public"]["Enums"]["workspace_plan"] }
+        Returns: number
       }
       search_normalize: { Args: { p_text: string }; Returns: string }
       shares_workspace_with: { Args: { p_user_id: string }; Returns: boolean }

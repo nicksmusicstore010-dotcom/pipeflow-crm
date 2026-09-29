@@ -27,7 +27,7 @@ export function SidebarContent({
         />
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-2">
-        <SidebarNav workspaceSlug={currentWorkspace.slug} onNavigate={onNavigate} />
+        <SidebarNav workspaceSlug={currentWorkspace.slug} isAdmin={currentWorkspace.role === "admin"} onNavigate={onNavigate} />
       </div>
     </>
   );

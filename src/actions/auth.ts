@@ -1,10 +1,10 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { safeNextPath } from "@/lib/safe-redirect";
+import { siteOrigin } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 
 export type AuthFormState = {
@@ -35,11 +35,6 @@ const signupSchema = z.object({
 const resendSchema = z.object({
   email: emailField,
 });
-
-/** Base URL for links in auth e-mails: the current origin, or the configured site URL. */
-function siteOrigin() {
-  return headers().get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
-}
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   invalid_credentials: "E-mail ou senha incorretos.",
@@ -85,6 +80,9 @@ export async function signup(_prev: AuthFormState, formData: FormData): Promise<
     password: formData.get("password"),
   });
   if (!parsed.success) return { error: firstIssue(parsed.error) };
+  // Where to land after confirming, e.g. back to /invite/<token>.
+  const next = safeNextPath(formData.get("next"));
+  const callback = `${siteOrigin()}/auth/callback${next === "/app" ? "" : `?next=${encodeURIComponent(next)}`}`;
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -92,7 +90,7 @@ export async function signup(_prev: AuthFormState, formData: FormData): Promise<
     password: parsed.data.password,
     options: {
       data: { full_name: parsed.data.fullName },
-      emailRedirectTo: `${siteOrigin()}/auth/callback`,
+      emailRedirectTo: callback,
     },
   });
   if (error) return { error: translateAuthError(error.code) };
@@ -105,7 +103,7 @@ export async function signup(_prev: AuthFormState, formData: FormData): Promise<
     };
   }
 
-  redirect("/app");
+  redirect(next);
 }
 
 export async function resendConfirmation(
@@ -130,10 +128,12 @@ export async function resendConfirmation(
   };
 }
 
-export async function logout() {
+/** `next` (optional form field): where to log in again, e.g. back to an invite. */
+export async function logout(formData?: FormData) {
+  const next = safeNextPath(formData?.get("next"), "");
   const supabase = await createClient();
   // "local" ends only this browser's session; the default ("global") would also
   // sign the user out on every other device.
   await supabase.auth.signOut({ scope: "local" });
-  redirect("/login");
+  redirect(next ? `/login?next=${encodeURIComponent(next)}` : "/login");
 }
