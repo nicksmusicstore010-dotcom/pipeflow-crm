@@ -45,6 +45,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   invalid_credentials: "E-mail ou senha incorretos.",
   email_not_confirmed: "Confirme seu e-mail antes de entrar.",
   user_already_exists: "Já existe uma conta com este e-mail.",
+  email_address_invalid: "Este e-mail não é aceito. Confira o endereço ou use outro.",
   weak_password: "Senha muito fraca. Use pelo menos 8 caracteres.",
   over_email_send_rate_limit: "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
   over_request_rate_limit: "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
@@ -131,6 +132,8 @@ export async function resendConfirmation(
 
 export async function logout() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  // "local" ends only this browser's session; the default ("global") would also
+  // sign the user out on every other device.
+  await supabase.auth.signOut({ scope: "local" });
   redirect("/login");
 }

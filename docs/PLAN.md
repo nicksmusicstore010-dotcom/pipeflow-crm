@@ -98,6 +98,19 @@ Branch: `feat/supabase-core`
 - [x] Após o `db push`: as 7 tabelas do `public` com RLS ativo (activities 4 policies, deals 4, leads 4, profiles 2, subscriptions 1, workspace_members 1, workspaces 2); advisors sem avisos de `anon`
 - [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
 
+**Auth real & proteção de rotas (aula 3.3, 29/09/2026):**
+
+Login/cadastro no Supabase Auth, `/auth/callback`, logout, proteção de rotas, onboarding (workspace + membro admin via `create_workspace()`) e switcher com dados reais já existiam (milestones 1 e 2). A proteção de rotas fica em `src/middleware.ts`: `proxy.ts` é o nome do mesmo arquivo a partir do Next 16, e o projeto está no Next 14.2 (um `proxy.ts` aqui não seria executado). Nesta aula, revisão + teste ponta a ponta:
+
+- [x] Correção: "Sair" encerrava a sessão em **todos** os aparelhos (`signOut()` usa `scope: "global"` por padrão); agora `scope: "local"` — só o navegador atual
+- [x] Mensagem em pt-BR para `email_address_invalid` (domínio recusado pelo Supabase), que caía no genérico "Não foi possível concluir"
+- [ ] SMTP próprio (Resend) ficou mais urgente: no teste, o SMTP padrão do Supabase já estava no limite de envio da hora e o cadastro pelo formulário respondeu "Muitas tentativas" — cadastros reais falham do mesmo jeito até configurar (item também listado em "Confirmação de e-mail")
+
+**Verificação (29/09/2026):**
+- [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
+- [x] Ponta a ponta no navegador (Playwright + Edge, build de produção, 33 checagens, usuário de teste apagado depois): anônimo em `/app`, `/onboarding` e rotas do workspace → `/login?next=` (com query string); cadastro pelo formulário (limite de e-mail → "Muitas tentativas"; usuário criado pelo mesmo fluxo de signup via `generateLink`, sem e-mail); no banco: usuário com e-mail normalizado, não confirmado, profile com o nome; login antes de confirmar → "Confirme seu e-mail" + reenviar; link de confirmação em outro navegador → logado em `/onboarding`; e-mail confirmado no banco; login → `/app` → `/onboarding` → criar workspace → dashboard com o nome no switcher; no banco: workspace (plano free, `created_by`) e o criador como único membro **admin**; `/app` → dashboard, `/login` logado → app, slug alheio → 404; Sair → `/login`, cookies de sessão apagados, voltar do navegador não mostra a página, rota do app → `/login?next=`, **outra sessão continua ativa**; login com `?next=` volta à página; `?next=` externo ignorado; senha errada → mensagem; sem erros no console. Linha de base antes da correção: "outra sessão continua ativa" falhava
+- [ ] Mensagem de `email_address_invalid` não verificada no navegador: com o limite de e-mail atingido, o Supabase responde o rate limit antes de validar o domínio (o código do erro foi confirmado chamando o `signUp` direto)
+
 ---
 
 ## 2. Workspaces (multiempresa) ✅
