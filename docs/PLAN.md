@@ -12,7 +12,7 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 | 4 | Pipeline Kanban | ✅ |
 | 5 | Atividades | ✅ |
 | 6 | Dashboard | ✅ |
-| 7 | Colaboração e permissões | ⬜ |
+| 7 | Colaboração e permissões | ✅ |
 | 8 | Monetização (Stripe) | ⬜ |
 | 9 | Landing page | ⬜ |
 | 10 | API pública, onboarding e polimento | ⬜ |
@@ -236,22 +236,36 @@ Leads, negócios, busca, filtros e drag-and-drop já liam e gravavam no Supabase
 
 ---
 
-## 7. Colaboração e permissões ⬜
+## 7. Colaboração e permissões ✅
 
-- [ ] Migration: `workspace_invites` (email, role, token, expires_at, accepted_at) + RLS
-- [ ] Tela de membros em Configurações: listar, alterar papel, remover (só admin)
-- [ ] Convite por e-mail com Resend (template em pt-BR com link `/invite/[token]`)
-- [ ] Aceitar convite: com conta existente ou criando uma nova
-- [ ] Permissões: membro sem acesso a Configurações/Billing (UI + servidor + RLS)
+Branch: `feat/collaboration` (aula 3.5 — Workspace & Colaboração, 29/09/2026)
 
-**Pronto quando:** um admin convida um e-mail, a pessoa aceita e entra no workspace como membro, sem acesso às configurações.
+- [x] Migration `20260929200000_collaboration.sql`: `workspace_invites` (email normalizado, role, **`token_hash`** SHA-256 — o token só existe no link —, invited_by, expires_at de 7 dias, accepted_at/by; um convite aberto por e-mail) + RLS (admins leem e cancelam; ninguém lê o hash; insert só pela RPC). Aplicada no remoto; tipos regenerados
+- [x] RPCs: `create_workspace_invite()` (só admin; recusa quem já é membro; limite do plano contando convites abertos; convidar de novo troca o token), `get_invite_preview()` (pública, o token é a permissão), `accept_workspace_invite()` (só o e-mail convidado; vencido/usado/cancelado com erro próprio; aceitar duas vezes não quebra), `list_workspace_members()` (nome + e-mail, só admin)
+- [x] Triggers em `workspace_members`: limite do plano Free (2 membros, mesmo fora do fluxo de convite), último admin não sai nem é rebaixado (mas excluir o workspace ou o usuário continua funcionando), membro removido → leads e negócios dele ficam sem responsável
+- [x] Convite por e-mail com Resend (`lib/resend.ts`, API via fetch, HTML + texto em pt-BR). Se o e-mail não sai (ex.: domínio ainda não verificado), o convite fica criado e o admin vê o link para copiar
+- [x] Página `/invite/[token]` (pública): anônimo → "Criar conta e aceitar" (cadastro com e-mail preenchido e `next` passando pela confirmação) ou "Já tenho conta — entrar" (volta ao convite); logado com o e-mail certo → "Aceitar convite" → dashboard do workspace; conta errada → aviso + "Sair e entrar com outra conta"; vencido / usado / cancelado → mensagem
+- [x] Configurações → membros (só admin): lista com e-mail e papel editável, remover com confirmação, convites pendentes (Reenviar / Cancelar), formulário de convite e card do plano ("1 de 2 vagas usadas" + upgrade em breve)
+- [x] Permissões: membro não vê "Configurações" na navegação e a página mostra "Acesso restrito" (UI + servidor + RLS)
+- [x] `src/lib/plans.ts` com `PLAN_LIMITS` (Free: 2 membros, 50 leads; Pro: ilimitado) — adianta parte do milestone 8
+
+**Verificação (29/09/2026):**
+- [x] Migration testada em transação com rollback antes do `db push` (38 checagens: e-mail normalizado, convite substituído, limite com convite aberto, já membro, token curto, hash ilegível, insert direto bloqueado, outro workspace isolado, prévia anônima, token antigo inválido, anônimo não aceita/lê, e-mail errado, token inexistente, aceite + idempotência, membro não convida/remove/promove, trigger do limite, Pro sem limite, vencido, usado, último admin, promover/rebaixar, `workspace_id` imutável, remoção desfaz responsáveis, cascatas de workspace e usuário)
+- [x] Advisors: só avisos esperados (RPCs chamadas pelo app; `get_invite_preview` pública por design)
+- [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
+- [x] Ponta a ponta no navegador (Playwright + Edge, build de produção, 41 checagens, 3 usuários de teste, apagados depois): convidar → link para copiar (domínio pendente) → banco com hash e 7 dias; Free cheio bloqueia o formulário; anônimo abre o convite → login → volta ao convite → aceita → dashboard; membro sem "Configurações" e com acesso restrito; banco: `workspace_members` + `accepted_at/by`; link usado; admin vê o membro, promove/rebaixa, não rebaixa o último admin; remove membro (lead/negócio sem responsável, 404 para o removido); conta errada; cancelar convite; mobile; **envio real pelo Resend para o dono da conta: "delivered" no Resend**
+- [x] Revisão visual: linha do membro espremida no celular (corrigido)
+- [ ] Domínio `pipeflow.com.br` "pending" no Resend (DNS não verificado): até verificar, só o dono da conta Resend recebe o e-mail; os demais convites saem pelo link copiado. Depois: `RESEND_FROM=PipeFlow <nao-responda@pipeflow.com.br>`
+- [ ] `RESEND_API_KEY` na Vercel (depois de trocar a chave que foi colada no chat)
+
+**Pronto quando:** um admin convida um e-mail, a pessoa aceita e entra no workspace como membro, sem acesso às configurações. ✅
 
 ---
 
 ## 8. Monetização (Stripe) ⬜
 
-- [ ] `src/lib/plans.ts` com os limites (Free: 2 colaboradores, 50 leads; Pro: ilimitado, R$ 49/mês)
-- [ ] Checagem dos limites no servidor ao criar lead e convidar membro; aviso + CTA de upgrade na UI
+- [x] `src/lib/plans.ts` com os limites (Free: 2 colaboradores, 50 leads; Pro: ilimitado, R$ 49/mês) — feito no milestone 7
+- [ ] Checagem dos limites no servidor ao criar lead e convidar membro; aviso + CTA de upgrade na UI — membros feito no milestone 7; falta leads e o CTA levar ao Checkout
 - [ ] Produto e preço no Stripe; Server Action que cria a sessão do Stripe Checkout
 - [ ] Webhook `/api/webhooks/stripe` (assinatura verificada): `checkout.session.completed`, `customer.subscription.updated/deleted` → grava em `subscriptions` (tabela criada na aula 3.2) e atualiza `workspaces.plan`
 - [ ] Botão para o Customer Portal (gerenciar/cancelar)

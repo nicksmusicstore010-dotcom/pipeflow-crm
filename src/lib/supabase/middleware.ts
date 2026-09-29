@@ -15,6 +15,7 @@ function isPublic(pathname: string) {
     PUBLIC_PATHS.includes(pathname) ||
     AUTH_PATHS.includes(pathname) ||
     pathname.startsWith("/auth/") ||
+    pathname.startsWith("/invite/") ||
     pathname.startsWith("/api/webhooks/")
   );
 }

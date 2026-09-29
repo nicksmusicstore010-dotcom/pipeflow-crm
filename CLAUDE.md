@@ -51,12 +51,15 @@ src/
     ui/                     # componentes shadcn/ui (gerados, não editar à mão sem motivo)
     layout/                 # sidebar, header, workspace switcher
     shared/                 # peças genéricas reutilizadas entre domínios (ex.: UserAvatar)
-    leads/ pipeline/ activities/ dashboard/ billing/ marketing/
+    leads/ pipeline/ activities/ dashboard/ members/ billing/ marketing/
   lib/
     supabase/               # client.ts (browser), server.ts (RSC/actions), middleware.ts, admin.ts (service role)
     stripe.ts
-    resend.ts
-    plans.ts                # limites dos planos (fonte única da verdade)
+    resend.ts               # envio de e-mail (API do Resend) + template do convite
+    plans.ts                # limites dos planos (fonte única da verdade; o de membros também é garantido no banco por plan_member_limit())
+    members.ts              # membros (com e-mail), convites pendentes e prévia do convite
+    roles.ts                # papéis admin/membro e rótulos (pode ser importado no cliente)
+    site-url.ts             # siteOrigin(): base dos links enviados por e-mail
     deal-stages.ts          # ordem, rótulos e cores das etapas do pipeline (fonte única)
     lead-status.ts          # status dos leads: ordem, rótulos e cores (fonte única)
     activity-types.ts       # tipos de atividade: ordem, rótulos, ícones e cores (fonte única)
@@ -87,7 +90,7 @@ docs/
 
 - `workspaces` — id, name, slug, plan (`free` | `pro`), stripe_customer_id, stripe_subscription_id
 - `workspace_members` — workspace_id, user_id, role (`admin` | `member`)
-- `workspace_invites` — workspace_id, email, role, token, expires_at, accepted_at
+- `workspace_invites` — workspace_id, email, role, token_hash (SHA-256; o token só existe no link do e-mail), invited_by, expires_at (7 dias), accepted_at, accepted_by. Criar/ver/aceitar só pelas RPCs `create_workspace_invite()` / `get_invite_preview()` / `accept_workspace_invite()` (aceita só o e-mail convidado)
 - `profiles` — espelha `auth.users` (nome, avatar)
 - `leads` — workspace_id, name, email, phone, company, position, status, owner_id
 - `deals` — workspace_id, lead_id, title, value_cents, stage, owner_id, due_date, position
@@ -118,7 +121,8 @@ Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `
 ### Permissões e planos
 - **Admin**: tudo, incluindo membros, convites, billing e configurações do workspace.
 - **Membro**: CRUD de leads, negócios e atividades. Sem acesso a settings/billing.
-- Limites do plano Free (2 colaboradores, 50 leads) são checados **no servidor** antes de inserir, lendo de `lib/plans.ts`. Na UI, mostrar o limite e um CTA de upgrade.
+- Limites do plano Free (2 colaboradores, 50 leads) são checados **no servidor** antes de inserir, lendo de `lib/plans.ts`. Na UI, mostrar o limite e um CTA de upgrade. Membros: o banco também barra (trigger em `workspace_members`; convites abertos contam como vaga) — mudar o limite exige migration.
+- Um workspace sempre tem pelo menos um admin (trigger `protect_last_admin`). Remover um membro deixa os leads/negócios dele sem responsável.
 - O plano do workspace só muda via webhook do Stripe (verificando a assinatura do evento) — nunca a partir do client.
 
 ### Atividades

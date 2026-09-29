@@ -10,8 +10,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function SignupForm() {
+/** `next`: where to land after confirming (e.g. an invite); `defaultEmail`: prefilled (invited address). */
+export function SignupForm({ next, defaultEmail }: { next?: string; defaultEmail?: string }) {
   const [state, formAction] = useFormState<AuthFormState, FormData>(signup, {});
+  const loginHref = next ? `/login?next=${encodeURIComponent(next)}` : "/login";
 
   if (state.success) {
     return (
@@ -21,7 +23,7 @@ export function SignupForm() {
           <CardDescription>{state.success}</CardDescription>
         </CardHeader>
         <CardFooter>
-          <Link href="/login" className="text-sm font-medium text-primary hover:underline">
+          <Link href={loginHref} className="text-sm font-medium text-primary hover:underline">
             Voltar para o login
           </Link>
         </CardFooter>
@@ -38,13 +40,14 @@ export function SignupForm() {
       <form action={formAction}>
         <CardContent className="space-y-4">
           {state.error && <FormMessage type="error">{state.error}</FormMessage>}
+          <input type="hidden" name="next" value={next ?? ""} />
           <div className="space-y-2">
             <Label htmlFor="fullName">Nome</Label>
             <Input id="fullName" name="fullName" autoComplete="name" maxLength={100} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">E-mail</Label>
-            <Input id="email" name="email" type="email" autoComplete="email" required />
+            <Input id="email" name="email" type="email" autoComplete="email" defaultValue={defaultEmail} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
@@ -64,7 +67,7 @@ export function SignupForm() {
           <SubmitButton>Criar conta</SubmitButton>
           <p className="text-sm text-muted-foreground">
             Já tem conta?{" "}
-            <Link href="/login" className="font-medium text-primary hover:underline">
+            <Link href={loginHref} className="font-medium text-primary hover:underline">
               Entrar
             </Link>
           </p>
