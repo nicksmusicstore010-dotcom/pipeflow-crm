@@ -11,7 +11,7 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 | 3 | Leads | ✅ |
 | 4 | Pipeline Kanban | ✅ |
 | 5 | Atividades | ✅ |
-| 6 | Dashboard | ⬜ |
+| 6 | Dashboard | ✅ |
 | 7 | Colaboração e permissões | ⬜ |
 | 8 | Monetização (Stripe) | ⬜ |
 | 9 | Landing page | ⬜ |
@@ -214,14 +214,25 @@ Branch: `feat/m5-atividades`
 
 ---
 
-## 6. Dashboard ⬜
+## 6. Dashboard ✅
 
-- [ ] Cards: total de leads, negócios abertos, valor total do pipeline, taxa de conversão (ganhos ÷ fechados) — total de leads, negócios abertos e valor do pipeline já ligados aos dados; falta a taxa de conversão
-- [ ] Gráfico de funil por etapa com Recharts
-- [ ] Lista "Meus negócios com prazo próximo" (usuário logado, próximos 7 dias + vencidos)
-- [ ] Consultas agregadas no servidor (views ou funções SQL se necessário)
+Branch: `feat/leads-data` (aula 3.4 — Leads & Pipeline com dados reais, 29/09/2026)
 
-**Pronto quando:** os números batem com os dados cadastrados e mudam ao mover negócios no pipeline.
+Leads, negócios, busca, filtros e drag-and-drop já liam e gravavam no Supabase (milestones 3 e 4); o que ainda era placeholder era o dashboard (conversão "—" e um aviso no lugar do funil e dos prazos).
+
+- [x] Cards: total de leads, negócios abertos, valor do pipeline e taxa de conversão (ganhos ÷ fechados, com "X ganhos de Y fechados"; "—" enquanto nenhum negócio foi fechado)
+- [x] Gráfico de funil por etapa com Recharts (`StageFunnelChart`): barras horizontais na ordem do board, uma cor só (primária) — a paleta das etapas reprovou no validador de cores como paleta categórica, e o nome no eixo já identifica cada barra; quantidade em cada barra (etapa vazia mostra "0"), valor em R$ no tooltip, tabela para leitor de tela
+- [x] Lista "Meus negócios com prazo próximo" (`UpcomingDealsList`): negócios abertos do usuário logado, vencidos ou vencendo em até 7 dias, do mais urgente ao menos; prazo com as cores do Kanban
+- [x] Consultas agregadas no servidor: migration `20260929180000_dashboard_metrics.sql` com a função `deal_stage_totals()` (`SECURITY INVOKER`, o RLS dos negócios continua valendo; soma por etapa no banco em vez de carregar todos os negócios). Substitui `openPipelineSummary()`. Aplicada no remoto; tipos regenerados
+- [x] Estado vazio do dashboard com CTA "Ir para o pipeline"; `addDays()` em `lib/utils.ts`
+
+**Verificação (29/09/2026):**
+- [x] `deal_stage_totals` testada em transação com rollback antes do `db push` (5 checagens: contagens e somas por etapa, outro workspace recebe vazio, anônimo sem acesso)
+- [x] `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros
+- [x] Ponta a ponta no navegador (Playwright + Edge, build de produção, 36 checagens, usuário e workspace de teste apagados depois): lead criado pelo formulário persiste após recarregar e está no banco (e-mail minúsculo, responsável e autor); busca sem acento e filtros de status/responsável conferidos contra contagens do banco e leads inseridos direto no banco aparecem na lista; negócio criado pelo formulário persiste (centavos, prazo); dashboard = banco (leads, abertos, valor, conversão, quantidade e valor por etapa); prazos próximos (vencido primeiro, fora de 7 dias / fechado / de outra pessoa ficam de fora); tooltip; **arrastar para outra coluna persiste após recarregar e grava `stage`/`position` sem buracos no banco**; dashboard acompanha os arrastes (conversão 50% → 66,7%); tema claro e escuro; mobile 390px sem rolagem horizontal; sem erros no console
+- [x] Revisão visual das capturas: etapa vazia sem barra nem número (corrigido: toco mínimo + "0") e títulos cortados na lista de prazos (corrigido: duas linhas)
+
+**Pronto quando:** os números batem com os dados cadastrados e mudam ao mover negócios no pipeline. ✅
 
 ---
 
