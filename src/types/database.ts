@@ -409,6 +409,14 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      deal_stage_totals: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          deal_count: number
+          stage: Database["public"]["Enums"]["deal_stage"]
+          value_cents: number
+        }[]
+      }
       is_user_in_workspace: {
         Args: { p_user_id: string; p_workspace_id: string }
         Returns: boolean

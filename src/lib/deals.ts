@@ -1,4 +1,3 @@
-import { CLOSED_STAGES } from "@/lib/deal-stages";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database";
 
@@ -50,16 +49,4 @@ export async function listLeadOptions(workspaceId: string): Promise<LeadOption[]
     .limit(1000);
   if (error) throw error;
   return data;
-}
-
-/** Open deals (not won/lost): how many and their total value in cents. */
-export async function openPipelineSummary(workspaceId: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("deals")
-    .select("value_cents")
-    .eq("workspace_id", workspaceId)
-    .not("stage", "in", `(${CLOSED_STAGES.join(",")})`);
-  if (error) throw error;
-  return { count: data.length, totalCents: data.reduce((sum, deal) => sum + deal.value_cents, 0) };
 }

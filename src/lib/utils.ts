@@ -76,6 +76,11 @@ export function daysBetween(from: string, to: string) {
   return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000)
 }
 
+/** "yyyy-MM-dd" moved by `days` calendar days (negative goes back). */
+export function addDays(day: string, days: number) {
+  return new Date(Date.parse(`${day}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10)
+}
+
 /**
  * What someone typed in a money field → cents, or null if it isn't a valid amount.
  * Brazilian format: "1.234,56", "1234,5", "R$ 1.234" and "1234" are accepted; a lone dot with

@@ -63,7 +63,8 @@ src/
     activities.ts           # consultas de atividades (timeline do lead)
     leads.ts                # consultas de leads (listagem com filtros/paginação, detalhe)
     sample-leads.ts         # leads de exemplo (fictícios) do botão "Carregar leads de exemplo"
-    deals.ts                # consultas de negócios (board, negócios do lead, resumo do pipeline)
+    deals.ts                # consultas de negócios (board, negócios do lead)
+    dashboard.ts            # métricas do dashboard (RPC deal_stage_totals) e negócios com prazo próximo
     validations/            # schemas Zod compartilhados entre formulário e Server Action
     action-result.ts        # tipo de retorno das Server Actions ({ ok: true } | ActionFailure)
     action-workspace.ts     # resolveWorkspace(): sessão + workspace do slug, para Server Actions
