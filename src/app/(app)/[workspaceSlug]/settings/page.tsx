@@ -103,7 +103,7 @@ export default async function SettingsPage({ params }: { params: { workspaceSlug
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <UsageMeter label="Membros e convites" usage={seats} unit="vagas" />
+          <UsageMeter label="Membros e convites" usage={seats} units={["vaga", "vagas"]} />
           <Button asChild variant={workspace.plan === "free" ? "default" : "outline"} size="sm" className="w-full">
             <Link href={billingHref}>{workspace.plan === "free" ? "Ver o plano Pro" : "Gerenciar plano"}</Link>
           </Button>

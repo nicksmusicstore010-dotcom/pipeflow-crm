@@ -72,6 +72,12 @@ export default async function BillingPage({
           Pagamento cancelado. Nada foi cobrado — você pode assinar o Pro quando quiser.
         </Notice>
       )}
+      {subscription?.status === "unpaid" && (
+        <Notice tone="warning" icon={TriangleAlert}>
+          <strong>A assinatura está sem pagamento</strong> e o workspace voltou para o plano Free. Atualize o cartão e
+          pague a fatura em aberto em &quot;Gerenciar assinatura&quot; para reativar o Pro.
+        </Notice>
+      )}
       {subscription?.status === "past_due" && (
         <Notice tone="warning" icon={TriangleAlert}>
           <strong>Não conseguimos cobrar a renovação.</strong> O Stripe vai tentar de novo nos próximos dias; atualize o
@@ -110,15 +116,16 @@ export default async function BillingPage({
           )}
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <UsageMeter label="Leads" usage={leads} unit="leads" />
-          <UsageMeter label="Membros e convites" usage={seats} unit="vagas" />
+          <UsageMeter label="Leads" usage={leads} units={["lead", "leads"]} />
+          <UsageMeter label="Membros e convites" usage={seats} units={["vaga", "vagas"]} />
         </CardContent>
       </Card>
 
       <PlanComparison
         currentPlan={workspace.plan}
         action={
-          !isPro && (
+          !isPro &&
+          subscription?.status !== "unpaid" && (
             <BillingRedirectButton workspaceSlug={workspace.slug} target="checkout" className="w-full" disabled={!configured}>
               Assinar Pro
             </BillingRedirectButton>
