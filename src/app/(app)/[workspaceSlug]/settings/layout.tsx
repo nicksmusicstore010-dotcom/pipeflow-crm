@@ -7,13 +7,12 @@ import { SettingsTabs } from "@/components/layout/settings-tabs";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
 
 /** Settings are admin-only: members see the notice instead of the pages (which also check the role). */
-export default async function SettingsLayout({
-  children,
-  params,
-}: {
+export default async function SettingsLayout(props: {
   children: React.ReactNode;
-  params: { workspaceSlug: string };
+  params: Promise<{ workspaceSlug: string }>;
 }) {
+  const { children } = props;
+  const params = await props.params;
   const workspace = await getWorkspaceBySlug(params.workspaceSlug);
   if (!workspace) notFound();
 

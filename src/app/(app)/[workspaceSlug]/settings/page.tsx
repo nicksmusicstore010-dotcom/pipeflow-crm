@@ -18,7 +18,8 @@ import { getWorkspaceBySlug } from "@/lib/workspaces";
 
 export const metadata: Metadata = { title: "Configurações" };
 
-export default async function SettingsPage({ params }: { params: { workspaceSlug: string } }) {
+export default async function SettingsPage(props: { params: Promise<{ workspaceSlug: string }> }) {
+  const params = await props.params;
   const [workspace, user] = await Promise.all([getWorkspaceBySlug(params.workspaceSlug), getCurrentUser()]);
   if (!workspace || !user) notFound();
   // The layout shows the "admins only" notice.

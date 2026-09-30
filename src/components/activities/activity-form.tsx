@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { createActivity, updateActivity } from "@/actions/activities";
@@ -43,7 +43,7 @@ export function ActivityForm({
     },
   });
   const { errors, isSubmitting } = form.formState;
-  const type = form.watch("type");
+  const type = useWatch({ control: form.control, name: "type" });
 
   async function onSubmit(input: ActivityFormValues) {
     // The field is pre-filled when the page loads; untouched on a new activity, it means "now".

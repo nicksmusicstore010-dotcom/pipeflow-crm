@@ -20,7 +20,8 @@ export const metadata: Metadata = { title: "Dashboard" };
 
 const percent = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 });
 
-export default async function DashboardPage({ params }: { params: { workspaceSlug: string } }) {
+export default async function DashboardPage(props: { params: Promise<{ workspaceSlug: string }> }) {
+  const params = await props.params;
   const [workspace, user] = await Promise.all([getWorkspaceBySlug(params.workspaceSlug), getCurrentUser()]);
   if (!workspace || !user) notFound();
 

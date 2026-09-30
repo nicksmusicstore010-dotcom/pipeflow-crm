@@ -23,11 +23,10 @@ const LINK_OUTCOMES: Record<string, AuthFormState> = {
   },
 };
 
-export default function LoginPage({
-  searchParams,
-}: {
-  searchParams: { next?: string | string[]; error?: string | string[] };
+export default async function LoginPage(props: {
+  searchParams: Promise<{ next?: string | string[]; error?: string | string[] }>;
 }) {
+  const searchParams = await props.searchParams;
   // Own keys only: `?error=constructor` would otherwise pick up Object.prototype members.
   const error = typeof searchParams.error === "string" ? searchParams.error : undefined;
   const initialState = (error && Object.hasOwn(LINK_OUTCOMES, error) && LINK_OUTCOMES[error]) || {};

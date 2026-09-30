@@ -33,6 +33,7 @@ export function CreateWorkspaceForm({ isFirst }: { isFirst: boolean }) {
               minLength={2}
               maxLength={60}
               autoComplete="organization"
+              defaultValue={state.fields?.name}
               autoFocus
               required
             />

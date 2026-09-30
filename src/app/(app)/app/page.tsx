@@ -9,7 +9,7 @@ export default async function AppEntryPage() {
   const workspaces = await getUserWorkspaces();
   if (workspaces.length === 0) redirect("/onboarding");
 
-  const lastSlug = cookies().get(LAST_WORKSPACE_COOKIE)?.value;
+  const lastSlug = (await cookies()).get(LAST_WORKSPACE_COOKIE)?.value;
   const target = workspaces.find((w) => w.slug === lastSlug) ?? workspaces[0];
   redirect(`/${target.slug}/dashboard`);
 }

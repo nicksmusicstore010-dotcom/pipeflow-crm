@@ -29,7 +29,7 @@ export function ResendConfirmationForm({ defaultEmail }: { defaultEmail?: string
           type="email"
           autoComplete="email"
           placeholder="seu@email.com"
-          defaultValue={defaultEmail}
+          defaultValue={state.fields?.email ?? defaultEmail}
           required
         />
       </div>

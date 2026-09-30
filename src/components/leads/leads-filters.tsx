@@ -45,12 +45,15 @@ export function LeadsFilters({ members, currentUserId }: { members: WorkspaceMem
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only the typed text should trigger this
   }, [query]);
 
-  // Keep the box in sync when the URL changes from outside (clear filters, back button).
-  // Same term modulo whitespace = our own update: keep what's typed ("Maria " mid-typing).
-  useEffect(() => {
-    const urlQuery = searchParams.get("q") ?? "";
-    setQuery((current) => (current.trim() === urlQuery ? current : urlQuery));
-  }, [searchParams]);
+  // Keep the box in sync when the URL changes from outside (clear filters, back button),
+  // adjusted during render rather than in an effect. Same term modulo whitespace = our
+  // own update: keep what's typed ("Maria " mid-typing).
+  const urlQuery = searchParams.get("q") ?? "";
+  const [syncedUrlQuery, setSyncedUrlQuery] = useState(urlQuery);
+  if (urlQuery !== syncedUrlQuery) {
+    setSyncedUrlQuery(urlQuery);
+    if (query.trim() !== urlQuery) setQuery(urlQuery);
+  }
 
   const hasFilters = FILTER_KEYS.some((key) => searchParams.has(key));
   // Values the server ignores (typo, a member who left) show as "Todos" instead of a blank select.

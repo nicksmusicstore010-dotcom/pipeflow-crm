@@ -32,13 +32,11 @@ function Notice({ tone, icon: Icon, children }: { tone: keyof typeof NOTICE_STYL
   );
 }
 
-export default async function BillingPage({
-  params,
-  searchParams,
-}: {
-  params: { workspaceSlug: string };
-  searchParams: Record<string, string | string[] | undefined>;
+export default async function BillingPage(props: {
+  params: Promise<{ workspaceSlug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const [params, searchParams] = await Promise.all([props.params, props.searchParams]);
   const workspace = await getWorkspaceBySlug(params.workspaceSlug);
   if (!workspace) notFound();
   // The layout shows the "admins only" notice.

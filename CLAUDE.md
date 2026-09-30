@@ -8,7 +8,7 @@ O PRD completo está em [docs/PRD.md](docs/PRD.md) — consulte-o antes de imple
 
 | Camada | Tecnologia |
 | --- | --- |
-| Framework | Next.js 14 (App Router) + React 18 + TypeScript 5 (strict) |
+| Framework | Next.js 16 (App Router, Turbopack) + React 19 + TypeScript 5 (strict) |
 | UI | Tailwind CSS + shadcn/ui + lucide-react |
 | Banco + Auth | Supabase (PostgreSQL + RLS + Auth) via `@supabase/ssr` |
 | Pagamentos | Stripe (Checkout, Customer Portal, webhooks) |
@@ -23,7 +23,7 @@ O PRD completo está em [docs/PRD.md](docs/PRD.md) — consulte-o antes de imple
 ```bash
 npm run dev          # servidor local
 npm run build        # build de produção
-npm run lint         # ESLint
+npm run lint         # ESLint 9 (eslint.config.mjs; `next lint` não existe mais no Next 16)
 npm run check:keys   # confere as chaves do Supabase no .env.local (sem imprimi-las)
 npx tsc --noEmit     # checagem de tipos
 stripe listen --events checkout.session.completed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.payment_failed --forward-to localhost:3000/api/webhooks/stripe   # webhook local (whsec_ → STRIPE_WEBHOOK_SECRET)
@@ -54,7 +54,7 @@ src/
     shared/                 # peças genéricas reutilizadas entre domínios (ex.: UserAvatar)
     leads/ pipeline/ activities/ dashboard/ members/ billing/ marketing/
   lib/
-    supabase/               # client.ts (browser), server.ts (RSC/actions), middleware.ts, admin.ts (service role)
+    supabase/               # client.ts (browser), server.ts (RSC/actions), middleware.ts (sessão, chamado por src/proxy.ts), admin.ts (service role)
     stripe.ts               # cliente Stripe (server-only, sob demanda) + envs de preço e webhook
     stripe-sync.ts          # lado do webhook: busca a assinatura no Stripe e grava subscriptions + workspaces.plan (chave secreta)
     billing.ts              # estado de cobrança da página /settings/billing (customer + última assinatura)
@@ -79,7 +79,8 @@ src/
     action-feedback.ts      # toast de erro de Server Action (sessão expirada, sem conexão)
     utils.ts                # cn(), formatCurrency(), formatDate(), initials()
   actions/                  # Server Actions por domínio (leads.ts, deals.ts, activities.ts, workspaces.ts...)
-  hooks/                    # use-action-form-state.ts: useFormState que mostra "sem conexão" no formulário em vez de quebrar a página
+  hooks/                    # use-action-form-state.ts: useActionState que guarda o que foi digitado e mostra "sem conexão" no formulário
+  proxy.ts                  # (ex-middleware.ts, renomeado no Next 16) renova a sessão e protege as rotas
   types/
     database.ts             # tipos gerados pelo Supabase
     supabase.ts             # nomes das linhas de cada tabela (Workspace, Lead, Subscription...) a partir de database.ts
@@ -108,6 +109,7 @@ Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `
 
 ### Código
 - **Código em inglês** (nomes de variáveis, tabelas, colunas, arquivos); **UI e textos para o usuário em pt-BR**.
+- Next 16: `params`, `searchParams`, `cookies()` e `headers()` são assíncronos (sempre `await`). Formulários com `<form action>`: use `useActionFormState` e `defaultValue={state.fields?.campo}` — o React 19 limpa o formulário a cada envio.
 - Server Components por padrão; `"use client"` só quando precisar de estado, eventos ou bibliotecas de browser (dnd-kit, Recharts, formulários).
 - Mutações via **Server Actions** em `src/actions/`; **Route Handlers** apenas para webhooks e para a API pública (`/api/v1`).
 - Toda entrada de usuário é validada com Zod no servidor, mesmo que já validada no cliente.
@@ -125,7 +127,7 @@ Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `
 - **Qualquer usuário logado pode chamar a API do Supabase direto** (chave publicável + JWT dele), sem passar pelas Server Actions. Toda regra de negócio que importa (limites de plano, quem pode editar, colunas imutáveis) precisa valer no banco: RLS, grants por coluna, triggers e RPCs.
 - Rate limits no banco via `private.hit_rate_limit(ação, máx, janela)` (schema `private`, fora da API): convites 20/hora e workspaces 10/dia por usuário — a RPC levanta `rate_limited`.
 - Cabeçalhos de segurança e CSP em `next.config.mjs`. O navegador só fala com o próprio app (`connect-src 'self'`; Supabase e Stripe são chamados do servidor): script, fonte ou API externa no cliente exige atualizar a CSP.
-- Supabase fora do ar ≠ deslogado: `getCurrentUser()` lança erro (tela "Tentar novamente") e o middleware não redireciona para `/login` quando o Auth não responde. Depois de uma action que falhou por rede (`NETWORK_ERROR`), nunca chame `router.refresh()` — offline ele vira navegação completa para a página de erro do navegador.
+- Supabase fora do ar ≠ deslogado: `getCurrentUser()` lança erro (tela "Tentar novamente") e o proxy não redireciona para `/login` quando o Auth não responde. Depois de uma action que falhou por rede (`NETWORK_ERROR`), nunca chame `router.refresh()` — offline ele vira navegação completa para a página de erro do navegador.
 
 ### Permissões e planos
 - **Admin**: tudo, incluindo membros, convites, billing e configurações do workspace.
