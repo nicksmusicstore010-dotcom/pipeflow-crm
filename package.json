@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "check:keys": "node --env-file=.env.local scripts/check-supabase-keys.mjs"
+    "check:keys": "node --env-file=.env.local scripts/check-supabase-keys.mjs",
+    "stripe:go-live": "node scripts/stripe-go-live.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

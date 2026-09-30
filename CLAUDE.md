@@ -25,6 +25,7 @@ npm run dev          # servidor local
 npm run build        # build de produção
 npm run lint         # ESLint 9 (eslint.config.mjs; `next lint` não existe mais no Next 16)
 npm run check:keys   # confere as chaves do Supabase no .env.local (sem imprimi-las)
+npm run stripe:go-live  # cobrança live em produção: produto/preço, portal, webhook, envs na Vercel e redeploy (pede a sk_live_ escondida)
 npx tsc --noEmit     # checagem de tipos
 stripe listen --events checkout.session.completed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.payment_failed --forward-to localhost:3000/api/webhooks/stripe   # webhook local (whsec_ → STRIPE_WEBHOOK_SECRET)
 npx supabase db push                                                   # aplicar migrations no projeto linkado
@@ -176,3 +177,13 @@ Construir em incrementos entregáveis, testando cada um antes do próximo:
 8. **Monetização** — planos, limites, Stripe Checkout, webhook, Customer Portal.
 9. **Landing page** — hero, funcionalidades, preços, CTA.
 10. **API pública e polimento** — `/api/v1`, onboarding guiado, ajustes de UX.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
