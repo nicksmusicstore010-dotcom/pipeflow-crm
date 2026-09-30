@@ -64,7 +64,7 @@ export async function createCheckoutSession(workspaceSlug: string): Promise<Bill
       };
     }
 
-    const billingUrl = `${siteOrigin()}/${workspace.slug}/settings/billing`;
+    const billingUrl = `${await siteOrigin()}/${workspace.slug}/settings/billing`;
     // Read by the webhook to know which workspace to upgrade (and who subscribed).
     const metadata = { workspace_id: workspace.id, user_id: user.id };
 
@@ -103,7 +103,7 @@ export async function createPortalSession(workspaceSlug: string): Promise<Billin
     const session = await getStripe().billingPortal.sessions.create({
       customer,
       locale: "pt-BR",
-      return_url: `${siteOrigin()}/${workspace.slug}/settings/billing`,
+      return_url: `${await siteOrigin()}/${workspace.slug}/settings/billing`,
     });
     return { ok: true, url: session.url };
   } catch (error) {

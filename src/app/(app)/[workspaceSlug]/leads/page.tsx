@@ -20,13 +20,11 @@ import { getWorkspaceBySlug, getWorkspaceMembers } from "@/lib/workspaces";
 
 export const metadata: Metadata = { title: "Leads" };
 
-export default async function LeadsPage({
-  params,
-  searchParams,
-}: {
-  params: { workspaceSlug: string };
-  searchParams: Record<string, string | string[] | undefined>;
+export default async function LeadsPage(props: {
+  params: Promise<{ workspaceSlug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const [params, searchParams] = await Promise.all([props.params, props.searchParams]);
   const [workspace, user] = await Promise.all([getWorkspaceBySlug(params.workspaceSlug), getCurrentUser()]);
   if (!workspace || !user) notFound();
 

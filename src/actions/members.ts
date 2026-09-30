@@ -71,7 +71,7 @@ export async function inviteMember(workspaceSlug: string, input: unknown): Promi
 
   const user = await getCurrentUser();
   const inviterName = (user?.user_metadata.full_name as string | undefined)?.trim() || user?.email || "Alguém";
-  const link = `${siteOrigin()}/invite/${token}`;
+  const link = `${await siteOrigin()}/invite/${token}`;
   const emailSent = await sendEmail({
     to: parsed.data.email,
     ...inviteEmail({

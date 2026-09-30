@@ -14,7 +14,8 @@ import { getWorkspaceBySlug, getWorkspaceMembers } from "@/lib/workspaces";
 
 export const metadata: Metadata = { title: "Pipeline" };
 
-export default async function PipelinePage({ params }: { params: { workspaceSlug: string } }) {
+export default async function PipelinePage(props: { params: Promise<{ workspaceSlug: string }> }) {
+  const params = await props.params;
   const [workspace, user] = await Promise.all([getWorkspaceBySlug(params.workspaceSlug), getCurrentUser()]);
   if (!workspace || !user) notFound();
 

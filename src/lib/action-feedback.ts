@@ -10,6 +10,8 @@ export function toastActionError(failure: ActionFailure) {
   }
   const next = window.location.pathname + window.location.search;
   toast.error(failure.error, {
+    // Outside React (a toast callback), and a full load drops the stale signed-out client state.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     action: { label: "Entrar", onClick: () => window.location.assign(`/login?next=${encodeURIComponent(next)}`) },
   });
 }

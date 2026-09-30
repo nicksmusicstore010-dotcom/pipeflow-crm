@@ -29,12 +29,14 @@ async function loadLead(params: Params) {
   return lead ? { workspace, lead } : null;
 }
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<Params> }): Promise<Metadata> {
+  const params = await props.params;
   const data = await loadLead(params);
   return { title: data?.lead.name ?? "Lead" };
 }
 
-export default async function LeadDetailPage({ params }: { params: Params }) {
+export default async function LeadDetailPage(props: { params: Promise<Params> }) {
+  const params = await props.params;
   const [data, user] = await Promise.all([loadLead(params), getCurrentUser()]);
   if (!data || !user) notFound();
   const { workspace, lead } = data;
@@ -163,6 +165,8 @@ export default async function LeadDetailPage({ params }: { params: Params }) {
               memberNames={new Map(members.map((m) => [m.id, m.name]))}
               currentUserId={user.id}
               isAdmin={workspace.role === "admin"}
+              // Server Component: rendered once per request, so this is the request time.
+              // eslint-disable-next-line react-hooks/purity
               now={Date.now()}
             />
           </section>

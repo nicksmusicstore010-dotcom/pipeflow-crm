@@ -82,7 +82,7 @@ export async function signup(_prev: AuthFormState, formData: FormData): Promise<
   if (!parsed.success) return { error: firstIssue(parsed.error) };
   // Where to land after confirming, e.g. back to /invite/<token>.
   const next = safeNextPath(formData.get("next"));
-  const callback = `${siteOrigin()}/auth/callback${next === "/app" ? "" : `?next=${encodeURIComponent(next)}`}`;
+  const callback = `${await siteOrigin()}/auth/callback${next === "/app" ? "" : `?next=${encodeURIComponent(next)}`}`;
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -117,7 +117,7 @@ export async function resendConfirmation(
   const { error } = await supabase.auth.resend({
     type: "signup",
     email: parsed.data.email,
-    options: { emailRedirectTo: `${siteOrigin()}/auth/callback` },
+    options: { emailRedirectTo: `${await siteOrigin()}/auth/callback` },
   });
   if (error) return { error: translateAuthError(error.code) };
 

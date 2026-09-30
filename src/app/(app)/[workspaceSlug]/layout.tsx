@@ -6,13 +6,12 @@ import { RememberWorkspace } from "@/components/workspaces/remember-workspace";
 import { getCurrentUser } from "@/lib/session";
 import { getUserWorkspaces } from "@/lib/workspaces";
 
-export default async function WorkspaceLayout({
-  children,
-  params,
-}: {
+export default async function WorkspaceLayout(props: {
   children: React.ReactNode;
-  params: { workspaceSlug: string };
+  params: Promise<{ workspaceSlug: string }>;
 }) {
+  const { children } = props;
+  const params = await props.params;
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 

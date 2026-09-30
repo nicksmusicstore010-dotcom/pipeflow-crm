@@ -30,7 +30,8 @@ function Notice({ title, description, user }: { title: string; description: stri
 }
 
 /** Invite landing page: works without a session (sign up / log in and come back here). */
-export default async function InvitePage({ params }: { params: { token: string } }) {
+export default async function InvitePage(props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   const { token } = params;
   const [preview, user] = await Promise.all([
     TOKEN_PATTERN.test(token) ? getInvitePreview(token) : null,

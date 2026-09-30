@@ -34,7 +34,7 @@ export function LoginForm({
             <input type="hidden" name="next" value={next ?? ""} />
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
-              <Input id="email" name="email" type="email" autoComplete="email" required />
+              <Input id="email" name="email" type="email" autoComplete="email" defaultValue={state.fields?.email} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>

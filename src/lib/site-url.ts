@@ -30,9 +30,9 @@ function isLocalhost(origin: string) {
  * back to themselves); a forged Origin header can't put another site's address
  * in an invite e-mail.
  */
-export function siteOrigin() {
+export async function siteOrigin() {
   const allowed = allowedOrigins();
-  const requestOrigin = originOf(headers().get("origin") ?? undefined);
+  const requestOrigin = originOf((await headers()).get("origin") ?? undefined);
 
   if (
     requestOrigin &&

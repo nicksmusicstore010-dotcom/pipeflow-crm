@@ -43,11 +43,18 @@ export function SignupForm({ next, defaultEmail }: { next?: string; defaultEmail
           <input type="hidden" name="next" value={next ?? ""} />
           <div className="space-y-2">
             <Label htmlFor="fullName">Nome</Label>
-            <Input id="fullName" name="fullName" autoComplete="name" maxLength={100} required />
+            <Input
+              id="fullName"
+              name="fullName"
+              autoComplete="name"
+              maxLength={100}
+              defaultValue={state.fields?.fullName}
+              required
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">E-mail</Label>
-            <Input id="email" name="email" type="email" autoComplete="email" defaultValue={defaultEmail} required />
+            <Input id="email" name="email" type="email" autoComplete="email" defaultValue={state.fields?.email ?? defaultEmail} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
