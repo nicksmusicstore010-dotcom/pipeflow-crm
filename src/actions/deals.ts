@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import type { ActionResult } from "@/lib/action-result";
+import { RATE_LIMITED, type ActionResult } from "@/lib/action-result";
 import { resolveWorkspace } from "@/lib/action-workspace";
 import { DEAL_STAGES } from "@/lib/deal-stages";
 import { createClient } from "@/lib/supabase/server";
@@ -24,6 +24,7 @@ function writeError(error: { code?: string; message?: string }) {
   // RLS: owner from outside the workspace. FK: lead deleted or from another workspace.
   if (error.code === "42501") return "O responsável precisa ser membro deste workspace.";
   if (error.code === "23503") return "O lead escolhido não existe mais neste workspace.";
+  if (error.message === "rate_limited") return RATE_LIMITED;
   return "Não foi possível salvar o negócio. Tente novamente.";
 }
 

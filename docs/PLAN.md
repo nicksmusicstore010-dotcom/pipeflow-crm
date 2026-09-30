@@ -319,6 +319,21 @@ Varredura do app inteiro depois do milestone 8: código (auth, redirects, Server
 
 ---
 
+## Auditoria de segurança pré-deploy (aula 5.1, 30/09/2026) 🚧
+
+Branch: `feat/deploy`. Nova varredura depois do Pix e do Next 16: banco remoto (RLS de todas as tabelas, policies, grants por tabela e por coluna, funções `SECURITY DEFINER`, schema `private`, `pg_cron`, `supabase db advisors`), proxy/auth/redirects, todas as Server Actions, webhook do Stripe, e-mail do convite, cabeçalhos, `npm audit`, envs `NEXT_PUBLIC_` e histórico do Git.
+
+- [x] **RLS ativo nas 9 tabelas do `public`** (activities, deals, leads, pix_payments, profiles, subscriptions, workspace_invites, workspace_members, workspaces), todas com policies; `private.rate_limit_events` sem RLS mas fora da API (sem `USAGE` no schema para `anon`/`authenticated`)
+- [x] **Isolamento entre workspaces testado no projeto real** (script com 2 usuários temporários, chave publicável + JWT de cada um, direto na API — sem passar pelo app; apagados depois): **54/54** — B não lê nenhuma tabela de A (filtrando pelo id de A nem sem filtro), não insere/altera/exclui leads, negócios, atividades, membros, convites nem o workspace de A, não vincula lead de A nem põe A como responsável, não move `workspace_id`, não vira Pro (`plan`/`pro_until`), RPCs (`deal_stage_totals`, `list_workspace_members`, `create_workspace_invite`, `move_deal`, `is_user_in_workspace`, `is_workspace_member`, `shares_workspace_with`, `apply_pix_payment`) não vazam nem agem em A; anônimo sem acesso a nada
+- [x] **Slug de workspace podia esconder rotas do app** (`create_workspace` direto com `p_slug = 'login'` criou o workspace `/login`; admins também podiam trocar o slug pela API) → constraint `workspaces_slug_not_reserved` com a mesma lista de `RESERVED_SLUGS` (migration `20260930180000_security_audit.sql`)
+- [x] **Negócios e atividades sem limite de volume** (uma conta Free inseriu 501 atividades, ~1 MB, numa chamada; repetido, lota o banco de todos os clientes) → trigger `rate_limit_insert`: 300 inserções/hora por usuário em cada tabela (service role não conta; lote recusado não gasta a cota); mensagem `RATE_LIMITED` nas actions
+- [x] **Nome de quem convida no e-mail vinha de `user_metadata`** (editável pelo próprio usuário na API do Auth, sem limite — entrava no assunto e no corpo do e-mail) → vem de `profiles.full_name` (≤ 100, checado no banco), como na página do convite
+- [x] Verificado sem mudança: proxy e `safeNextPath`, `/auth/callback`, CSP e cabeçalhos, Server Actions (Zod + sessão + papel + RLS), busca com `.ilike()` parametrizado, webhook (assinatura no corpo cru, estado relido do Stripe, valor do Pix conferido), chave secreta só em `stripe-sync.ts`, sem `dangerouslySetInnerHTML`, e-mail com HTML escapado, `npm audit` 0 (inclusive dev), histórico do Git sem segredos, advisors só com os avisos esperados
+- [ ] **Aplicar a migration no remoto:** `npx supabase db push` (o push foi bloqueado pela permissão da sessão) e rodar de novo o teste de isolamento — os 2 achados do banco passam a ser recusados
+- [ ] Recomendado depois: CSP com nonce (hoje `script-src 'unsafe-inline'`; os cookies de sessão do `@supabase/ssr` não são httpOnly, então um XSS leria a sessão) — exige renderização dinâmica em todas as páginas
+
+---
+
 ## 9. Landing page ⬜
 
 - [ ] Hero com proposta de valor e CTA

@@ -3,3 +3,6 @@ export type ActionFailure = { ok: false; error: string; unauthenticated?: boolea
 
 /** Result of a Server Action: `{ ok: true, ...data }` or an `ActionFailure`. */
 export type ActionResult<T extends object = object> = ({ ok: true } & T) | ActionFailure;
+
+/** The database's `rate_limited` error (too many inserts per hour, see private.hit_rate_limit). */
+export const RATE_LIMITED = "Muitos registros criados em pouco tempo. Aguarde alguns minutos e tente novamente.";
