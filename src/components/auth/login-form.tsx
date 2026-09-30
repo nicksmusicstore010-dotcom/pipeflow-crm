@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useFormState } from "react-dom";
 
 import { login, type AuthFormState } from "@/actions/auth";
 import { FormMessage } from "@/components/auth/form-message";
@@ -10,6 +9,7 @@ import { SubmitButton } from "@/components/auth/submit-button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useActionFormState } from "@/hooks/use-action-form-state";
 
 export function LoginForm({
   next,
@@ -18,7 +18,7 @@ export function LoginForm({
   next?: string;
   initialState?: AuthFormState;
 }) {
-  const [state, formAction] = useFormState<AuthFormState, FormData>(login, initialState);
+  const [state, formAction] = useActionFormState(login, initialState);
 
   return (
     <div className="space-y-4">

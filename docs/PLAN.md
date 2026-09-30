@@ -292,6 +292,27 @@ Branch: `feat/collaboration` (aula 3.5 — Workspace & Colaboração, 29/09/2026
 
 ---
 
+## Auditoria de segurança e robustez (30/09/2026) ✅
+
+Varredura do app inteiro depois do milestone 8: código (auth, redirects, Server Actions, validações), banco (RLS, grants, funções, `supabase db advisors`), cabeçalhos HTTP, dependências (`npm audit`), histórico do Git e testes ponta a ponta no navegador.
+
+- [x] **Limite de 50 leads contornável** pela API do Supabase (só era checado na Server Action) → trigger `enforce_lead_limit` + `plan_lead_limit()` (migration `20260930120000_security_hardening.sql`); a action traduz o `plan_limit` do banco
+- [x] **`profiles` sem limites** (nome de qualquer tamanho e `avatar_url` com qualquer esquema, exibidos aos colegas) → nome ≤ 100, avatar só `https://` ≤ 2048; o trigger de cadastro sanitiza em vez de falhar
+- [x] **Convites sem limite de envio** (cada um dispara e-mail pelo Resend) e **workspaces sem limite de criação** (cada um é uma cota Free nova) → `private.hit_rate_limit()`: 20 convites/hora e 10 workspaces/dia por usuário, erro `rate_limited` com mensagem em pt-BR; convite recusado (plano cheio) não gasta a cota
+- [x] **Link do convite montado com o cabeçalho `Origin`** (forjável fora do navegador) → `siteOrigin()` só aceita origens do próprio app (URL do site + URLs da Vercel; localhost só quando a URL configurada é local)
+- [x] **Sem cabeçalhos de segurança** → CSP (`default-src 'self'`, `connect-src 'self'`, `frame-ancestors 'none'`, `form-action 'self'`, `object-src 'none'`), X-Frame-Options, nosniff, Referrer-Policy (o token do convite fica no caminho), Permissions-Policy, COOP, HSTS; sem `X-Powered-By`
+- [x] **Supabase fora do ar deslogava o usuário** (middleware mandava para `/login`; páginas davam 404) → erro de rede do Auth vira tela "Algo deu errado / Tentar novamente" e as actions respondem "sem conexão", com a sessão preservada
+- [x] **Arrastar card sem internet derrubava a página** (o `router.refresh()` após a falha virava navegação completa → página "sem Internet" do navegador) → sem refresh em falha de rede (Kanban e aceitar convite); "Tentar novamente" offline avisa em vez de navegar
+- [x] **Formulários de login/cadastro/reenviar/criar workspace sem internet** trocavam a página inteira pela tela de erro → `useActionFormState`: mensagem no formulário, o que foi digitado fica
+- [x] **Busca com termo tipo `' or 1=1 --`** era bloqueada pelo Cloudflare do Supabase e quebrava a página de leads → "Não foi possível buscar por esse termo"
+- [x] Verificado sem mudança: `safeNextPath` (open redirect), callback de auth, RLS/grants de todas as tabelas, chaves compostas lead↔negócio/atividade, `is_user_in_workspace` (já corrigida), sem `dangerouslySetInnerHTML`, e-mail com HTML escapado, histórico do Git sem segredos, webhook do Stripe
+- [x] Testes: migration em transação com rollback (27 checagens: limites, sanitização, rate limits, schema `private` inacessível, isolamento entre workspaces, colunas de plano/Stripe/tokens protegidas); ponta a ponta no navegador (67 checagens: cabeçalhos, páginas públicas, login com erro/offline, onboarding, leads/busca/filtros/busca maliciosa/XSS, atividades, negócios, Kanban online/offline, dashboard, sessão expirada, convite + membro, intruso de outro workspace → 404, celular sem rolagem lateral, zero violações da CSP e zero erros de console); queda simulada do Supabase (6); cobrança de novo (25)
+- [ ] **Atualizar o Next.js** (14.2.35 é o último da linha 14; o `npm audit` aponta advisories corrigidos só no 15/16 — os relevantes aqui são DoS em Server Components/Actions e cache poisoning; os de imagem, rewrites, i18n, Edge e servidor Windows não se aplicam). Exige migrar para params/cookies assíncronos e React 19: fazer numa branch própria, rodando os testes ponta a ponta
+- [ ] Supabase Auth: senha mínima 6 no projeto (o formulário exige 8; só afeta quem chama a API direto e a própria conta) — alinhar para 8 no painel (não usar `config push`, ver incidente de 29–30/09)
+- [ ] "Leaked password protection" do Supabase Auth: exige plano pago
+
+---
+
 ## 9. Landing page ⬜
 
 - [ ] Hero com proposta de valor e CTA

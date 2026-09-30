@@ -64,7 +64,7 @@ src/
     plans.ts                # limites dos planos (fonte única da verdade; o de membros também é garantido no banco por plan_member_limit())
     members.ts              # membros (com e-mail), convites pendentes e prévia do convite
     roles.ts                # papéis admin/membro e rótulos (pode ser importado no cliente)
-    site-url.ts             # siteOrigin(): base dos links enviados por e-mail
+    site-url.ts             # siteOrigin(): base dos links de e-mail e do Stripe (Origin só se for uma origem do próprio app)
     deal-stages.ts          # ordem, rótulos e cores das etapas do pipeline (fonte única)
     lead-status.ts          # status dos leads: ordem, rótulos e cores (fonte única)
     activity-types.ts       # tipos de atividade: ordem, rótulos, ícones e cores (fonte única)
@@ -79,7 +79,7 @@ src/
     action-feedback.ts      # toast de erro de Server Action (sessão expirada, sem conexão)
     utils.ts                # cn(), formatCurrency(), formatDate(), initials()
   actions/                  # Server Actions por domínio (leads.ts, deals.ts, activities.ts, workspaces.ts...)
-  hooks/
+  hooks/                    # use-action-form-state.ts: useFormState que mostra "sem conexão" no formulário em vez de quebrar a página
   types/
     database.ts             # tipos gerados pelo Supabase
     supabase.ts             # nomes das linhas de cada tabela (Workspace, Lead, Subscription...) a partir de database.ts
@@ -121,12 +121,16 @@ Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `
 - Mudanças de schema sempre como nova migration em `supabase/migrations/`; nunca editar migrations já aplicadas.
 - Valores monetários armazenados em **centavos (integer)** e formatados como BRL (`R$ 1.234,56`) só na exibição.
 - Datas em `timestamptz` (UTC) no banco; exibição em `America/Sao_Paulo`, formato `dd/MM/yyyy`.
-- Busca de leads usa a coluna gerada `search_text` (sem acentos, minúscula); normalize o termo do mesmo jeito antes do `ilike`.
+- Busca de leads usa a coluna gerada `search_text` (sem acentos, minúscula); normalize o termo do mesmo jeito antes do `ilike`. O firewall (Cloudflare) na frente do Supabase bloqueia termos com cara de SQL injection com uma página HTML (erro sem `code`): `listLeads` devolve `searchBlocked` em vez de quebrar a página.
+- **Qualquer usuário logado pode chamar a API do Supabase direto** (chave publicável + JWT dele), sem passar pelas Server Actions. Toda regra de negócio que importa (limites de plano, quem pode editar, colunas imutáveis) precisa valer no banco: RLS, grants por coluna, triggers e RPCs.
+- Rate limits no banco via `private.hit_rate_limit(ação, máx, janela)` (schema `private`, fora da API): convites 20/hora e workspaces 10/dia por usuário — a RPC levanta `rate_limited`.
+- Cabeçalhos de segurança e CSP em `next.config.mjs`. O navegador só fala com o próprio app (`connect-src 'self'`; Supabase e Stripe são chamados do servidor): script, fonte ou API externa no cliente exige atualizar a CSP.
+- Supabase fora do ar ≠ deslogado: `getCurrentUser()` lança erro (tela "Tentar novamente") e o middleware não redireciona para `/login` quando o Auth não responde. Depois de uma action que falhou por rede (`NETWORK_ERROR`), nunca chame `router.refresh()` — offline ele vira navegação completa para a página de erro do navegador.
 
 ### Permissões e planos
 - **Admin**: tudo, incluindo membros, convites, billing e configurações do workspace.
 - **Membro**: CRUD de leads, negócios e atividades. Sem acesso a settings/billing.
-- Limites do plano Free (2 colaboradores, 50 leads) são checados **no servidor** antes de inserir, lendo de `lib/plans.ts`. Na UI, mostrar o limite e um CTA de upgrade. Membros: o banco também barra (trigger em `workspace_members`; convites abertos contam como vaga) — mudar o limite exige migration.
+- Limites do plano Free (2 colaboradores, 50 leads) são checados **no servidor** antes de inserir, lendo de `lib/plans.ts`. Na UI, mostrar o limite e um CTA de upgrade. O banco também barra os dois (triggers `enforce_member_limit` — convites abertos contam como vaga — e `enforce_lead_limit`, erro `plan_limit`) — mudar um limite exige migration (`plan_member_limit()` / `plan_lead_limit()`).
 - Um workspace sempre tem pelo menos um admin (trigger `protect_last_admin`). Remover um membro deixa os leads/negócios dele sem responsável.
 - O plano do workspace só muda via webhook do Stripe (verificando a assinatura do evento) — nunca a partir do client.
 

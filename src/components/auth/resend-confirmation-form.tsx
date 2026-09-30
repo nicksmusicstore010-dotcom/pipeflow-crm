@@ -1,16 +1,15 @@
 "use client";
 
-import { useFormState } from "react-dom";
-
 import { resendConfirmation, type AuthFormState } from "@/actions/auth";
 import { FormMessage } from "@/components/auth/form-message";
 import { SubmitButton } from "@/components/auth/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useActionFormState } from "@/hooks/use-action-form-state";
 
 /** "Didn't get the e-mail?" box: sends a fresh signup confirmation link. */
 export function ResendConfirmationForm({ defaultEmail }: { defaultEmail?: string }) {
-  const [state, formAction] = useFormState<AuthFormState, FormData>(resendConfirmation, {});
+  const [state, formAction] = useActionFormState<AuthFormState>(resendConfirmation, {});
 
   return (
     <form action={formAction} className="space-y-3 rounded-lg border border-dashed p-4">

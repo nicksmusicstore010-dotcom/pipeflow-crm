@@ -526,6 +526,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      plan_lead_limit: {
+        Args: { p_plan: Database["public"]["Enums"]["workspace_plan"] }
+        Returns: number
+      }
       plan_member_limit: {
         Args: { p_plan: Database["public"]["Enums"]["workspace_plan"] }
         Returns: number

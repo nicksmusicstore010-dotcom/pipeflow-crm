@@ -3,9 +3,11 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Loader2, RotateCw } from "lucide-react";
+import { toast } from "sonner";
 
 import { EmptyState } from "@/components/layout/empty-state";
 import { Button } from "@/components/ui/button";
+import { NETWORK_ERROR } from "@/lib/action-feedback";
 
 /** Unexpected failure outside a workspace (login, onboarding…), instead of Next's English error screen. */
 export default function RootError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
@@ -13,6 +15,11 @@ export default function RootError({ reset }: { error: Error & { digest?: string 
   const [pending, startTransition] = useTransition();
   // reset() alone re-renders with the cached server payload; refresh() refetches it.
   function retry() {
+    // Offline, the refresh would become a full page load on the browser's error page.
+    if (!navigator.onLine) {
+      toast.error(NETWORK_ERROR.error);
+      return;
+    }
     startTransition(() => {
       router.refresh();
       reset();

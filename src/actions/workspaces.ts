@@ -34,6 +34,9 @@ export async function createWorkspace(
     p_name: parsed.data.name,
     p_slug: workspaceSlugFor(parsed.data.name),
   });
+  if (error?.message === "rate_limited") {
+    return { error: "Você criou muitos workspaces hoje. Tente novamente amanhã." };
+  }
   if (error || !data) return { error: "Não foi possível criar o workspace. Tente novamente." };
 
   redirect(`/${data.slug}/dashboard`);
