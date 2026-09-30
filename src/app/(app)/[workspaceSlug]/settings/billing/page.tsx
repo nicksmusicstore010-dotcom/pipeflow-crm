@@ -116,8 +116,8 @@ export default async function BillingPage({
           )}
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <UsageMeter label="Leads" usage={leads} unit="leads" />
-          <UsageMeter label="Membros e convites" usage={seats} unit="vagas" />
+          <UsageMeter label="Leads" usage={leads} units={["lead", "leads"]} />
+          <UsageMeter label="Membros e convites" usage={seats} units={["vaga", "vagas"]} />
         </CardContent>
       </Card>
 

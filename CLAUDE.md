@@ -26,6 +26,7 @@ npm run build        # build de produção
 npm run lint         # ESLint
 npm run check:keys   # confere as chaves do Supabase no .env.local (sem imprimi-las)
 npx tsc --noEmit     # checagem de tipos
+stripe listen --events checkout.session.completed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.payment_failed --forward-to localhost:3000/api/webhooks/stripe   # webhook local (whsec_ → STRIPE_WEBHOOK_SECRET)
 npx supabase db push                                                   # aplicar migrations no projeto linkado
 npx supabase gen types typescript --linked > src/types/database.ts  # regenerar tipos do banco
 ```
@@ -54,7 +55,11 @@ src/
     leads/ pipeline/ activities/ dashboard/ members/ billing/ marketing/
   lib/
     supabase/               # client.ts (browser), server.ts (RSC/actions), middleware.ts, admin.ts (service role)
-    stripe.ts
+    stripe.ts               # cliente Stripe (server-only, sob demanda) + envs de preço e webhook
+    stripe-sync.ts          # lado do webhook: busca a assinatura no Stripe e grava subscriptions + workspaces.plan (chave secreta)
+    billing.ts              # estado de cobrança da página /settings/billing (customer + última assinatura)
+    subscription-status.ts  # status da assinatura: rótulos e quais mantêm o Pro
+    limits.ts               # canAddLead() / canAddMember(): uso x limite do plano, checados no servidor
     resend.ts               # envio de e-mail (API do Resend) + template do convite
     plans.ts                # limites dos planos (fonte única da verdade; o de membros também é garantido no banco por plan_member_limit())
     members.ts              # membros (com e-mail), convites pendentes e prévia do convite

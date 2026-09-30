@@ -2,8 +2,18 @@ import type { LimitCheck } from "@/lib/limits";
 import { cn } from "@/lib/utils";
 
 /** "12 de 50 leads" with a bar; amber when the plan limit is reached. Unlimited = count only. */
-export function UsageMeter({ label, usage, unit }: { label: string; usage: LimitCheck; unit: string }) {
+export function UsageMeter({
+  label,
+  usage,
+  units,
+}: {
+  label: string;
+  usage: LimitCheck;
+  /** Singular and plural, e.g. ["lead", "leads"]. */
+  units: [string, string];
+}) {
   const { used, limit } = usage;
+  const unit = (n: number) => units[n === 1 ? 0 : 1];
   const full = limit !== null && used >= limit;
 
   return (
@@ -11,7 +21,7 @@ export function UsageMeter({ label, usage, unit }: { label: string; usage: Limit
       <div className="flex items-baseline justify-between gap-2 text-sm">
         <span className="text-muted-foreground">{label}</span>
         <span className={cn("tabular-nums", full && "font-medium text-amber-700 dark:text-amber-300")}>
-          {limit === null ? `${used} ${unit} · ilimitado` : `${used} de ${limit} ${unit}`}
+          {limit === null ? `${used} ${unit(used)} · ilimitado` : `${used} de ${limit} ${unit(limit)}`}
         </span>
       </div>
       {limit !== null && (
