@@ -76,7 +76,7 @@ Branch: `feat/supabase-core`
 - [x] Endereço de produção: **https://pipeflow-crm-olive.vercel.app** (`pipeflow-crm.vercel.app` é de outra pessoa)
 - [x] Supabase Auth (30/09/2026): Site URL `https://pipeflow-crm-olive.vercel.app`; Redirect URLs `https://pipeflow-crm-olive.vercel.app/**` e `http://localhost:3000/**`. `supabase/config.toml` agora espelha a configuração remota de Auth (`npx supabase config diff` para conferir)
 - [x] **Incidente (29–30/09/2026):** o `supabase config push` rodado para trocar a URL não respeitou o "n" (sem terminal interativo ele confirma sozinho) e enviou também os padrões locais do `config.toml`: desligou "Confirm email", MFA TOTP e Storage Analytics, OTP 8→6 dígitos, intervalo entre e-mails 60s→1s. Nenhum cadastro no período. Restaurado (painel + `config push`): confirmação, MFA, OTP 8, intervalo 60s. **Storage Analytics não volta no plano Free** (402: exige plano pago) — o app não usa. Lição: `config push` só depois de `config diff` limpo, e nunca contar com o prompt de confirmação
-- [ ] Existem 4 projetos na Vercel fazendo deploy do mesmo repo (`pipeflow-crm`, `pipeflow-crm-czaz`, `pipeflow`, `pipeflow-crm-1`); só o `pipeflow-crm` tem a chave secreta — apagar os duplicados
+- [x] Existiam 4 projetos na Vercel fazendo deploy do mesmo repo; os duplicados (`pipeflow`, `pipeflow-crm-1`, `pipeflow-crm-czaz`, sem domínio próprio nem envs, todos com 500) foram apagados em 30/09/2026 — fica só o `pipeflow-crm`
 - [x] `client.ts` (navegador) como singleton lazy: criado na primeira chamada, não no import, e reaproveitado — uma sessão e um conjunto de listeners por aba
 - [x] `server.ts`: `createClient()` async (`await cookies()`), um client por request; as 29 chamadas em actions, `lib/` e `/auth/callback` passaram a usar `await createClient()` — já no formato exigido pelo Next 15
 - [x] `.env.local` confirmado no `.gitignore` (regra `.env*.local`) e nunca versionado
@@ -260,7 +260,8 @@ Branch: `feat/collaboration` (aula 3.5 — Workspace & Colaboração, 29/09/2026
 - [x] Ponta a ponta no navegador (Playwright + Edge, build de produção, 41 checagens, 3 usuários de teste, apagados depois): convidar → link para copiar (domínio pendente) → banco com hash e 7 dias; Free cheio bloqueia o formulário; anônimo abre o convite → login → volta ao convite → aceita → dashboard; membro sem "Configurações" e com acesso restrito; banco: `workspace_members` + `accepted_at/by`; link usado; admin vê o membro, promove/rebaixa, não rebaixa o último admin; remove membro (lead/negócio sem responsável, 404 para o removido); conta errada; cancelar convite; mobile; **envio real pelo Resend para o dono da conta: "delivered" no Resend**
 - [x] Revisão visual: linha do membro espremida no celular (corrigido)
 - [ ] Domínio próprio para e-mail: o `pipeflow.com.br` foi cadastrado no Resend mas não é do projeto (registrado em 2021, DNS na Postali) — a verificação falhou e ele foi removido do Resend (29/09/2026). Sem domínio, o app usa o remetente de teste do Resend: só o dono da conta recebe; os demais convites saem pelo link copiado. Com um domínio próprio: verificar no Resend e definir `RESEND_FROM` (também resolve o SMTP do Supabase)
-- [ ] `RESEND_API_KEY` na Vercel (depois de trocar a chave que foi colada no chat)
+- [x] `RESEND_API_KEY` na Vercel (Production, sensível) + redeploy (30/09/2026). Verificado em produção: convite para o dono da conta Resend enviado por e-mail
+- [ ] Trocar a chave do Resend (foi colada no chat): criar nova em resend.com/api-keys, atualizar `.env.local` e a Vercel, apagar a antiga
 
 **Pronto quando:** um admin convida um e-mail, a pessoa aceita e entra no workspace como membro, sem acesso às configurações. ✅
 
