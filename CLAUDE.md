@@ -27,7 +27,7 @@ npm run lint         # ESLint 9 (eslint.config.mjs; `next lint` não existe mais
 npm run check:keys   # confere as chaves do Supabase no .env.local (sem imprimi-las)
 npm run stripe:go-live  # cobrança live em produção: produto/preço, portal, webhook, envs na Vercel e redeploy (pede a sk_live_ escondida)
 npx tsc --noEmit     # checagem de tipos
-stripe listen --events checkout.session.completed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.payment_failed --forward-to localhost:3000/api/webhooks/stripe   # webhook local (whsec_ → STRIPE_WEBHOOK_SECRET)
+stripe listen --events checkout.session.completed,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.payment_failed --forward-to localhost:3000/api/webhooks/stripe   # webhook local (whsec_ → STRIPE_WEBHOOK_SECRET)
 npx supabase db push                                                   # aplicar migrations no projeto linkado
 npx supabase gen types typescript --linked > src/types/database.ts  # regenerar tipos do banco
 ```
@@ -95,7 +95,7 @@ docs/
 
 ## Modelo de domínio
 
-- `workspaces` — id, name, slug, plan (`free` | `pro`), stripe_customer_id, stripe_subscription_id
+- `workspaces` — id, name, slug, plan (`free` | `pro`), stripe_customer_id, stripe_subscription_id, pro_until (Pro pago com Pix vale até aqui)
 - `workspace_members` — workspace_id, user_id, role (`admin` | `member`)
 - `workspace_invites` — workspace_id, email, role, token_hash (SHA-256; o token só existe no link do e-mail), invited_by, expires_at (7 dias), accepted_at, accepted_by. Criar/ver/aceitar só pelas RPCs `create_workspace_invite()` / `get_invite_preview()` / `accept_workspace_invite()` (aceita só o e-mail convidado)
 - `profiles` — espelha `auth.users` (nome, avatar)
@@ -103,6 +103,7 @@ docs/
 - `deals` — workspace_id, lead_id, title, value_cents, stage, owner_id, due_date, position
 - `activities` — workspace_id, lead_id, author_id, type (`call` | `email` | `meeting` | `note`), description, occurred_at
 - `subscriptions` — id (`sub_...` do Stripe), workspace_id, stripe_customer_id, stripe_price_id, status, current_period_end, cancel_at_period_end. Só o webhook grava (chave secreta); só admins leem. `workspaces.plan` continua sendo o campo lido para os limites
+- `pix_payments` — id (`cs_...` da sessão do Checkout, garante que um webhook repetido não estende duas vezes), workspace_id, months, amount_cents, period_start/end. Gravado só por `apply_pix_payment()` (service role); admins leem
 
 Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `proposal_sent` → `negotiation` → `won` | `lost`. Rótulos na UI: Novo Lead, Contato Realizado, Proposta Enviada, Negociação, Fechado Ganho, Fechado Perdido.
 
@@ -136,6 +137,8 @@ Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `
 - Limites do plano Free (2 colaboradores, 50 leads) são checados **no servidor** antes de inserir, lendo de `lib/plans.ts`. Na UI, mostrar o limite e um CTA de upgrade. O banco também barra os dois (triggers `enforce_member_limit` — convites abertos contam como vaga — e `enforce_lead_limit`, erro `plan_limit`) — mudar um limite exige migration (`plan_member_limit()` / `plan_lead_limit()`).
 - Um workspace sempre tem pelo menos um admin (trigger `protect_last_admin`). Remover um membro deixa os leads/negócios dele sem responsável.
 - O plano do workspace só muda via webhook do Stripe (verificando a assinatura do evento) — nunca a partir do client.
+- **Duas formas de pagar o Pro:** cartão = assinatura mensal (Checkout `mode=subscription`); **Pix = pré-pago** de 1, 3, 6 ou 12 meses (Checkout `mode=payment`, `metadata.kind = "pix_pro"`), porque conta Stripe do Brasil não tem Pix recorrente (Pix Automático). O Pix é assíncrono: o Pro entra em `checkout.session.completed` (se já veio pago) ou `checkout.session.async_payment_succeeded`. O workspace é Pro enquanto houver assinatura viva **ou** `pro_until` no futuro; o `pg_cron` (`expire-prepaid-pro`, a cada 15 min) rebaixa quem venceu sem cartão. Pix e cartão não se sobrepõem (cada checkout recusa se o outro estiver valendo). Reembolso de Pix pelo painel do Stripe **não** tira o Pro automaticamente.
+- Testar Pix no modo de teste: CPF `000.000.000-00`; o e-mail define o resultado (`...succeed_immediately@...` paga na hora; e-mail comum paga em ~3 min; `...expire_immediately@...` expira).
 
 ### Atividades
 - Qualquer membro registra; só o autor ou um admin edita/exclui (RLS + menu só para quem pode). `author_id` vem de `auth.uid()`, nunca do cliente.

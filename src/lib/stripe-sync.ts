@@ -3,6 +3,7 @@ import "server-only";
 import type Stripe from "stripe";
 import { z } from "zod";
 
+import { isPixMonths, PRO_MONTHLY_CENTS } from "@/lib/plans";
 import { getStripe } from "@/lib/stripe";
 import { isSubscriptionStatus, PRO_STATUSES } from "@/lib/subscription-status";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -51,30 +52,33 @@ async function findWorkspaceId(admin: AdminClient, subscription: Stripe.Subscrip
 
 /**
  * The workspace is Pro while any of its subscriptions is active (or retrying a
- * payment); otherwise it goes back to Free. Existing members and leads are kept.
+ * payment) or while Pro paid with Pix hasn't run out; otherwise it goes back to
+ * Free. Existing members and leads are kept.
  */
 async function refreshWorkspacePlan(admin: AdminClient, workspaceId: string, customerId: string) {
-  const { data, error } = await admin
-    .from("subscriptions")
-    .select("id")
-    .eq("workspace_id", workspaceId)
-    .in("status", [...PRO_STATUSES])
-    .order("created_at", { ascending: false })
-    .limit(1);
-  if (error) throw error;
+  const [subscriptions, workspace] = await Promise.all([
+    admin
+      .from("subscriptions")
+      .select("id")
+      .eq("workspace_id", workspaceId)
+      .in("status", [...PRO_STATUSES])
+      .order("created_at", { ascending: false })
+      .limit(1),
+    admin.from("workspaces").select("pro_until").eq("id", workspaceId).single(),
+  ]);
+  if (subscriptions.error) throw subscriptions.error;
+  if (workspace.error) throw workspace.error;
 
-  const current = data[0] ?? null;
+  const current = subscriptions.data[0] ?? null;
+  const prepaid = workspace.data.pro_until !== null && Date.parse(workspace.data.pro_until) > Date.now();
+  const plan = current || prepaid ? "pro" : "free";
   const { error: updateError } = await admin
     .from("workspaces")
-    .update({
-      plan: current ? "pro" : "free",
-      stripe_customer_id: customerId,
-      stripe_subscription_id: current?.id ?? null,
-    })
+    .update({ plan, stripe_customer_id: customerId, stripe_subscription_id: current?.id ?? null })
     .eq("id", workspaceId);
   if (updateError) throw updateError;
 
-  return current ? "pro" : "free";
+  return plan;
 }
 
 /**
@@ -117,4 +121,46 @@ export async function syncSubscription(subscriptionId: string, workspaceHint: st
 /** Subscription an invoice was issued for (null for one-off invoices). */
 export function invoiceSubscriptionId(invoice: Stripe.Invoice) {
   return stripeId(invoice.parent?.subscription_details?.subscription);
+}
+
+/** Checkout Session paying Pro in advance with Pix (see createPixCheckoutSession). */
+export function isPixProSession(session: Stripe.Checkout.Session) {
+  return session.mode === "payment" && session.metadata?.kind === "pix_pro";
+}
+
+/**
+ * A paid Pix Checkout Session → N more months of Pro (apply_pix_payment() is
+ * atomic and ignores a session it already applied, so retries are harmless).
+ * Returns null when there is nothing to apply (not paid yet, workspace gone).
+ */
+export async function applyPixCheckout(session: Stripe.Checkout.Session) {
+  if (!isPixProSession(session) || session.payment_status !== "paid") return null;
+
+  const { workspaceId, userId } = readCheckoutMetadata(session.metadata);
+  const months = Number(session.metadata?.months);
+  const paymentIntentId = stripeId(session.payment_intent);
+  const customerId = stripeId(session.customer);
+  // All set by createPixCheckoutSession (customer_creation: "always") on a paid session.
+  if (!workspaceId || !userId || !isPixMonths(months) || !paymentIntentId || !customerId) {
+    throw new Error(`Pix session ${session.id} with missing or invalid data.`);
+  }
+  // What was actually paid must match the months (the IOF of foreign accounts is charged on top).
+  const expected = months * PRO_MONTHLY_CENTS;
+  if (session.currency !== "brl" || session.amount_subtotal !== expected) {
+    throw new Error(`Pix session ${session.id}: paid ${session.amount_subtotal} ${session.currency}, expected ${expected} brl.`);
+  }
+
+  const { data, error } = await createAdminClient().rpc("apply_pix_payment", {
+    p_session_id: session.id,
+    p_workspace_id: workspaceId,
+    p_months: months,
+    p_amount_cents: session.amount_total ?? expected,
+    p_payment_intent_id: paymentIntentId,
+    p_paid_by: userId,
+    p_customer_id: customerId,
+  });
+  // Workspace deleted meanwhile: nothing to extend (and retrying won't help).
+  if (error?.code === "P0002") return null;
+  if (error) throw error;
+  return { workspaceId, months, proUntil: data };
 }

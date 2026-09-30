@@ -1,30 +1,35 @@
 "use client";
 
 import { useTransition } from "react";
-import { CreditCard, Loader2, Sparkles } from "lucide-react";
+import { CreditCard, Loader2, QrCode, Sparkles } from "lucide-react";
 
-import { createCheckoutSession, createPortalSession } from "@/actions/billing";
+import { createCheckoutSession, createPixCheckoutSession, createPortalSession } from "@/actions/billing";
 import { Button, type ButtonProps } from "@/components/ui/button";
 import { NETWORK_ERROR, toastActionError } from "@/lib/action-feedback";
 
 const TARGETS = {
-  checkout: { action: createCheckoutSession, icon: Sparkles },
-  portal: { action: createPortalSession, icon: CreditCard },
+  checkout: { action: (slug: string) => createCheckoutSession(slug), icon: Sparkles },
+  pix: { action: (slug: string, months?: number) => createPixCheckoutSession(slug, months), icon: QrCode },
+  portal: { action: (slug: string) => createPortalSession(slug), icon: CreditCard },
 };
 
-/** Sends the admin to Stripe: Checkout ("Assinar Pro") or the Customer Portal ("Gerenciar assinatura"). */
+/**
+ * Sends the admin to Stripe: card Checkout ("Assinar Pro"), Pix Checkout for
+ * `months` of Pro, or the Customer Portal ("Gerenciar assinatura").
+ */
 export function BillingRedirectButton({
   workspaceSlug,
   target,
+  months,
   children,
   ...props
-}: { workspaceSlug: string; target: keyof typeof TARGETS } & Omit<ButtonProps, "onClick">) {
+}: { workspaceSlug: string; target: keyof typeof TARGETS; months?: number } & Omit<ButtonProps, "onClick">) {
   const [pending, startTransition] = useTransition();
   const { action, icon: Icon } = TARGETS[target];
 
   function go() {
     startTransition(async () => {
-      const result = await action(workspaceSlug).catch(() => NETWORK_ERROR);
+      const result = await action(workspaceSlug, months).catch(() => NETWORK_ERROR);
       if (!result.ok) {
         toastActionError(result);
         return;
