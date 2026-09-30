@@ -2,7 +2,14 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 
 import { getStripe, getWebhookSecret } from "@/lib/stripe";
-import { invoiceSubscriptionId, readCheckoutMetadata, stripeId, syncSubscription } from "@/lib/stripe-sync";
+import {
+  applyPixCheckout,
+  invoiceSubscriptionId,
+  isPixProSession,
+  readCheckoutMetadata,
+  stripeId,
+  syncSubscription,
+} from "@/lib/stripe-sync";
 
 // The only Route Handler for mutations in the app: Stripe calls it directly,
 // with no session. Everything else changes data through Server Actions.
@@ -37,9 +44,14 @@ export async function POST(request: Request) {
 
 async function handleEvent(event: Stripe.Event) {
   switch (event.type) {
-    // Checkout paid → Pro.
+    // Checkout paid → Pro. With Pix the customer may still be paying in the bank app
+    // (payment_status "unpaid"): then the Pro comes with async_payment_succeeded.
     case "checkout.session.completed": {
       const session = event.data.object;
+      if (isPixProSession(session)) {
+        await applyPixAndLog(session, "completed");
+        return;
+      }
       const subscriptionId = stripeId(session.subscription);
       if (session.mode !== "subscription" || !subscriptionId) return;
 
@@ -48,6 +60,18 @@ async function handleEvent(event: Stripe.Event) {
       console.info(
         `[stripe webhook] checkout completed: workspace ${result?.workspaceId ?? "not found"} → ${result?.plan ?? "-"} (by user ${userId ?? "?"})`,
       );
+      return;
+    }
+
+    // Pix confirmed by the bank after the checkout → N more months of Pro.
+    case "checkout.session.async_payment_succeeded": {
+      await applyPixAndLog(event.data.object, "confirmed");
+      return;
+    }
+
+    // Pix QR code expired unpaid: nothing to undo.
+    case "checkout.session.async_payment_failed": {
+      console.info(`[stripe webhook] Pix not paid (expired): session ${event.data.object.id}`);
       return;
     }
 
@@ -80,4 +104,13 @@ async function handleEvent(event: Stripe.Event) {
       // Other events enabled on the endpoint are acknowledged and ignored.
       return;
   }
+}
+
+async function applyPixAndLog(session: Stripe.Checkout.Session, stage: string) {
+  const result = await applyPixCheckout(session);
+  console.info(
+    result
+      ? `[stripe webhook] Pix ${stage}: workspace ${result.workspaceId} +${result.months} month(s), Pro until ${result.proUntil}`
+      : `[stripe webhook] Pix ${stage}: session ${session.id} ${session.payment_status} — nothing to apply yet`,
+  );
 }

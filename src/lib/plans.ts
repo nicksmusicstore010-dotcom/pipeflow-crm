@@ -24,7 +24,18 @@ export const PLAN_LABELS: Record<WorkspacePlan, string> = {
   pro: "Pro",
 };
 
-/** Display price; the amount charged is the Stripe price in STRIPE_PRO_PRICE_ID. */
+/** Pro monthly price in cents: the Pix charge (months × this) and the checks on it. */
+export const PRO_MONTHLY_CENTS = 4900;
+
+/** How many months of Pro can be bought at once with Pix (max R$ 3.000 per Pix). */
+export const PIX_MONTH_OPTIONS = [1, 3, 6, 12] as const;
+export type PixMonths = (typeof PIX_MONTH_OPTIONS)[number];
+
+export function isPixMonths(value: unknown): value is PixMonths {
+  return PIX_MONTH_OPTIONS.includes(value as PixMonths);
+}
+
+/** Display price; the card subscription charges the Stripe price in STRIPE_PRO_PRICE_ID. */
 export const PLAN_PRICES: Record<WorkspacePlan, string> = {
   free: "R$ 0",
   pro: "R$ 49",

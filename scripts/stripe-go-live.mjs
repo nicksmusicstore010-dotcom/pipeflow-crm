@@ -1,7 +1,7 @@
 // Puts Stripe billing live in production in one run:
 //   1. Pro product + R$ 49/mês price (reused if it already exists)
 //   2. Customer Portal (card, invoices, cancel at period end)
-//   3. Webhook endpoint for <site>/api/webhooks/stripe with the 5 events the app handles
+//   3. Webhook endpoint for <site>/api/webhooks/stripe with the events the app handles (card + Pix)
 //   4. STRIPE_* variables on Vercel (Production) + redeploy
 //
 // Usage (PowerShell or bash, from the project root):
@@ -26,10 +26,17 @@ const option = (name, fallback) => {
 
 const TEST = flag("--test");
 const SITE = option("--site", "https://pipeflow-crm-olive.vercel.app").replace(/\/+$/, "");
+// Also goes into the redeploy command line: only a plain https host is accepted.
+if (!/^https:\/\/[a-z0-9.-]+$/i.test(SITE)) {
+  console.error(`--site precisa ser uma URL https sem caminho, ex.: https://meu-app.vercel.app (recebido: ${SITE})`);
+  process.exit(1);
+}
 const WEBHOOK_URL = `${SITE}/api/webhooks/stripe`;
 const PRICE_LOOKUP_KEY = "pipeflow_pro_monthly";
 const WEBHOOK_EVENTS = [
   "checkout.session.completed",
+  "checkout.session.async_payment_succeeded",
+  "checkout.session.async_payment_failed",
   "customer.subscription.created",
   "customer.subscription.updated",
   "customer.subscription.deleted",
@@ -126,6 +133,17 @@ if (price) {
 }
 if (price.currency !== "brl" || price.unit_amount !== 4900 || price.recurring?.interval !== "month") {
   fail(`O preço ${price.id} não é R$ 49/mês — confira no painel.`);
+}
+
+step("Pix");
+try {
+  const configs = await stripe.paymentMethodConfigurations.list({ limit: 10 });
+  const main = configs.data.find((c) => c.is_default) ?? configs.data[0];
+  const pix = main?.pix;
+  if (pix?.available) done("ativo — o cliente pode pagar com Pix");
+  else console.log("  ! Pix não está ativo: ative em Stripe → Settings → Payment methods → Pix (o cartão funciona mesmo assim).");
+} catch {
+  console.log("  ! Não foi possível conferir o Pix: confira em Stripe → Settings → Payment methods.");
 }
 
 step("Customer Portal");

@@ -12,6 +12,7 @@ export type Lead = Tables<"leads">;
 export type Deal = Tables<"deals">;
 export type Activity = Tables<"activities">;
 export type Subscription = Tables<"subscriptions">;
+export type PixPayment = Tables<"pix_payments">;
 
 export type LeadInsert = TablesInsert<"leads">;
 export type LeadUpdate = TablesUpdate<"leads">;

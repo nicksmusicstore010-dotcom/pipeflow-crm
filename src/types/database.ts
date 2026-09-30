@@ -241,6 +241,57 @@ export type Database = {
           },
         ]
       }
+      pix_payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          months: number
+          paid_by: string | null
+          payment_intent_id: string | null
+          period_end: string
+          period_start: string
+          workspace_id: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id: string
+          months: number
+          paid_by?: string | null
+          payment_intent_id?: string | null
+          period_end: string
+          period_start: string
+          workspace_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          months?: number
+          paid_by?: string | null
+          payment_intent_id?: string | null
+          period_end?: string
+          period_start?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pix_payments_paid_by_fkey"
+            columns: ["paid_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pix_payments_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -416,6 +467,7 @@ export type Database = {
           id: string
           name: string
           plan: Database["public"]["Enums"]["workspace_plan"]
+          pro_until: string | null
           slug: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -427,6 +479,7 @@ export type Database = {
           id?: string
           name: string
           plan?: Database["public"]["Enums"]["workspace_plan"]
+          pro_until?: string | null
           slug: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -438,6 +491,7 @@ export type Database = {
           id?: string
           name?: string
           plan?: Database["public"]["Enums"]["workspace_plan"]
+          pro_until?: string | null
           slug?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -451,6 +505,18 @@ export type Database = {
     }
     Functions: {
       accept_workspace_invite: { Args: { p_token: string }; Returns: string }
+      apply_pix_payment: {
+        Args: {
+          p_amount_cents: number
+          p_customer_id: string
+          p_months: number
+          p_paid_by: string
+          p_payment_intent_id: string
+          p_session_id: string
+          p_workspace_id: string
+        }
+        Returns: string
+      }
       create_workspace: {
         Args: { p_name: string; p_slug: string }
         Returns: {
@@ -459,6 +525,7 @@ export type Database = {
           id: string
           name: string
           plan: Database["public"]["Enums"]["workspace_plan"]
+          pro_until: string | null
           slug: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null

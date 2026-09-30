@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Enums, Tables } from "@/types/database";
 
-export type WorkspaceSummary = Pick<Tables<"workspaces">, "id" | "name" | "slug" | "plan"> & {
+export type WorkspaceSummary = Pick<Tables<"workspaces">, "id" | "name" | "slug" | "plan" | "pro_until"> & {
   role: Enums<"workspace_role">;
 };
 
@@ -16,7 +16,7 @@ export const getUserWorkspaces = cache(async (): Promise<WorkspaceSummary[]> => 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("workspace_members")
-    .select("role, workspace:workspaces(id, name, slug, plan)")
+    .select("role, workspace:workspaces(id, name, slug, plan, pro_until)")
     .eq("user_id", user.id)
     .order("created_at");
   if (error) throw error;
