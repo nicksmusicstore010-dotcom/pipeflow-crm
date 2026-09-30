@@ -5,16 +5,23 @@ import { z } from "zod";
 
 import type { ActionResult } from "@/lib/action-result";
 import { resolveWorkspace } from "@/lib/action-workspace";
+import { canAddLead } from "@/lib/limits";
+import { PLAN_LABELS } from "@/lib/plans";
 import { SAMPLE_LEADS } from "@/lib/sample-leads";
 import { getCurrentUser } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { leadSchema, toLeadRow } from "@/lib/validations/lead";
+import type { WorkspaceSummary } from "@/lib/workspaces";
 
 export type LeadActionResult = ActionResult<{ leadId: string }>;
 
 const leadIdSchema = z.uuid();
 
 const GENERIC_ERROR = "Não foi possível salvar o lead. Tente novamente.";
+
+function leadLimitError(plan: WorkspaceSummary["plan"], limit: number | null) {
+  return `O plano ${PLAN_LABELS[plan]} permite até ${limit} leads. Faça upgrade para o Pro para cadastrar mais.`;
+}
 
 // RLS rejects an owner from outside the workspace with 42501.
 function writeError(code: string | undefined) {
@@ -28,6 +35,10 @@ export async function createLead(workspaceSlug: string, input: unknown): Promise
   const resolved = await resolveWorkspace(workspaceSlug);
   if ("error" in resolved) return resolved.error;
   const { workspace } = resolved;
+
+  const quota = await canAddLead(workspace).catch(() => null);
+  if (!quota) return { ok: false, error: GENERIC_ERROR };
+  if (!quota.allowed) return { ok: false, error: leadLimitError(workspace.plan, quota.limit) };
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -112,6 +123,10 @@ export async function createSampleLeads(workspaceSlug: string): Promise<ActionRe
     ...toLeadRow(leadSchema.parse({ ...lead, ownerId: owned && user ? user.id : "" })),
     workspace_id: workspace.id,
   }));
+  const quota = await canAddLead(workspace, rows.length).catch(() => null);
+  if (!quota) return { ok: false, error: "Não foi possível carregar os exemplos. Tente novamente." };
+  if (!quota.allowed) return { ok: false, error: leadLimitError(workspace.plan, quota.limit) };
+
   const { error } = await supabase.from("leads").insert(rows);
   if (error) return { ok: false, error: "Não foi possível carregar os exemplos. Tente novamente." };
 

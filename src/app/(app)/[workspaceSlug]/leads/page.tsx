@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Plus, SearchX, Users } from "lucide-react";
 
+import { PlanLimitAlert } from "@/components/billing/plan-limit-alert";
 import { EmptyState } from "@/components/layout/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { LeadFormDialog } from "@/components/leads/lead-form-dialog";
@@ -11,7 +12,9 @@ import { LeadsPagination } from "@/components/leads/leads-pagination";
 import { LeadsTable } from "@/components/leads/leads-table";
 import { SampleLeadsButton } from "@/components/leads/sample-leads-button";
 import { Button } from "@/components/ui/button";
+import { canAddLead } from "@/lib/limits";
 import { hasActiveFilters, LEADS_PAGE_SIZE, listLeads, parseLeadFilters } from "@/lib/leads";
+import { PLAN_LABELS } from "@/lib/plans";
 import { getCurrentUser } from "@/lib/session";
 import { getWorkspaceBySlug, getWorkspaceMembers } from "@/lib/workspaces";
 
@@ -28,9 +31,10 @@ export default async function LeadsPage({
   if (!workspace || !user) notFound();
 
   const filters = parseLeadFilters(searchParams);
-  const [{ leads, total }, members] = await Promise.all([
+  const [{ leads, total }, members, quota] = await Promise.all([
     listLeads(workspace.id, filters),
     getWorkspaceMembers(workspace.id),
+    canAddLead(workspace),
   ]);
 
   const basePath = `/${workspace.slug}/leads`;
@@ -41,24 +45,37 @@ export default async function LeadsPage({
     redirect(qs ? `${basePath}?${qs}` : basePath);
   }
 
-  const newLeadButton = (label: string) => (
-    <LeadFormDialog
-      workspaceSlug={workspace.slug}
-      members={members}
-      currentUserId={user.id}
-      trigger={
-        <Button>
-          <Plus />
-          {label}
-        </Button>
-      }
-    />
-  );
+  // Plan full: the button stays visible but disabled; the alert explains why (the action checks again).
+  const newLeadButton = (label: string) =>
+    !quota.allowed ? (
+      <Button disabled>
+        <Plus />
+        {label}
+      </Button>
+    ) : (
+      <LeadFormDialog
+        workspaceSlug={workspace.slug}
+        members={members}
+        currentUserId={user.id}
+        trigger={
+          <Button>
+            <Plus />
+            {label}
+          </Button>
+        }
+      />
+    );
   const filtering = hasActiveFilters(filters);
 
   return (
     <>
       <PageHeader title="Leads" description="Seus contatos e oportunidades." actions={newLeadButton("Novo lead")} />
+      {!quota.allowed && (
+        <PlanLimitAlert workspaceSlug={workspace.slug} isAdmin={workspace.role === "admin"}>
+          Você atingiu o limite de {quota.limit} leads do plano {PLAN_LABELS[workspace.plan]}. Os leads cadastrados
+          continuam disponíveis, mas novos cadastros exigem o Pro.
+        </PlanLimitAlert>
+      )}
 
       {total === 0 && !filtering ? (
         <EmptyState
