@@ -58,6 +58,15 @@ async function handleEvent(event: Stripe.Event) {
       return;
     }
 
+    // Any other change: cancellation scheduled or undone in the Portal, a delayed
+    // payment confirmed (incomplete → active), unpaid after the retries (→ Free).
+    case "customer.subscription.created":
+    case "customer.subscription.updated": {
+      const result = await syncSubscription(event.data.object.id);
+      console.info(`[stripe webhook] ${event.type}: workspace ${result?.workspaceId ?? "not found"} → ${result?.status ?? "-"}`);
+      return;
+    }
+
     // Renewal charge failed: status becomes past_due (still Pro while Stripe retries).
     case "invoice.payment_failed": {
       const subscriptionId = invoiceSubscriptionId(event.data.object);

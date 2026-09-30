@@ -275,12 +275,15 @@ Branch: `feat/collaboration` (aula 3.5 — Workspace & Colaboração, 29/09/2026
 - [ ] Produto e preço no Stripe (modo de teste) + chaves no `.env.local` — **pendente: as chaves ainda não foram coladas** (linhas vazias no `.env.local`; documentadas no `.env.example`)
 - [x] Server Action `createCheckoutSession` (só admin; metadata `workspace_id` + `user_id` na sessão e na assinatura; reaproveita o customer do workspace; `success_url`/`cancel_url` → billing)
 - [x] Webhook `/api/webhooks/stripe` (Route Handler, `runtime = nodejs`): body cru via `request.text()`, `constructEvent` com `STRIPE_WEBHOOK_SECRET`; `checkout.session.completed` → Pro, `customer.subscription.deleted` → Free, `invoice.payment_failed` → `past_due` (continua Pro enquanto o Stripe tenta de novo). Cada evento busca a assinatura atual no Stripe e grava `subscriptions` + `workspaces.plan`/`stripe_*` com a chave secreta (ordem/duplicidade de eventos não importam). 400 assinatura inválida, 500 falha (Stripe reenvia), 200 `{ received: true }`
-- [ ] `customer.subscription.updated` (cancelamento agendado, reativação, troca de cartão) — aula 4.1
+- [x] `customer.subscription.created/updated` (aula 4.1): cancelamento agendado no Portal ("Pro até dd/MM/yyyy"), reativação, pagamento que confirma depois do checkout (`incomplete` → `active` → Pro) e `unpaid` depois das tentativas (→ Free, com aviso e só o Portal para regularizar)
+- [x] Checkout não abre uma segunda assinatura (aula 4.1): antes de criar a sessão, pergunta ao Stripe se o customer do workspace já tem assinatura viva (clique duplo ou dois admins antes de o webhook chegar). Ainda possível: dois checkouts no **primeiro** upgrade, antes de existir customer, se a pessoa pagar os dois
+- [x] Revisão (aula 4.1): tipos, lint e build; webhook no build de produção (os 9 casos acima + `subscription.updated`); billing anônimo → `/login?next=`; segredos fora do bundle do browser e das envs `NEXT_PUBLIC_`; `.env.local` no `.gitignore`
 - [x] Botão "Gerenciar assinatura" → Server Action `createPortalSession` (Customer Portal)
 - [x] Página `/settings/billing` (aba "Cobrança" em Configurações, layout compartilhado com a checagem de admin): plano atual, uso de leads e vagas, Free × Pro, "Assinar Pro", avisos de retorno do checkout, pagamento pendente e cancelamento agendado
 - [x] Verificado (aula 4.2): `tsc`, lint e build; webhook no build de produção com segredo de teste — sem assinatura / assinatura falsa / outro segredo / body alterado → 400; evento válido não tratado, checkout `mode=payment` e fatura avulsa → 200; checkout de assinatura com chave inválida → 500. Nenhum segredo no bundle do browser
 - [ ] Teste ponta a ponta no modo de teste do Stripe (`stripe listen --forward-to localhost:3000/api/webhooks/stripe` + cartão 4242…) — depende das chaves e do Stripe CLI (não instalado nesta máquina)
-- [ ] Produção: endpoint do webhook no painel do Stripe + envs na Vercel
+- [ ] Salvar a configuração do Customer Portal no painel do Stripe (modo de teste também), senão "Gerenciar assinatura" falha
+- [ ] Produção: endpoint do webhook no painel do Stripe (eventos listados no `.env.example`) + envs na Vercel
 
 **Pronto quando:** no modo de teste do Stripe, o upgrade libera os limites e o cancelamento volta o workspace para Free automaticamente.
 

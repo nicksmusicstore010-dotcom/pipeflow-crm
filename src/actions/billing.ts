@@ -29,6 +29,12 @@ async function stripeCustomerId(workspaceId: string) {
   return data.stripe_customer_id;
 }
 
+/** The customer's subscription that isn't over yet (active, trialing, past_due, unpaid...), if any. */
+async function findLiveSubscription(customer: string) {
+  const { data } = await getStripe().subscriptions.list({ customer, status: "all", limit: 10 });
+  return data.find((s) => !["canceled", "incomplete", "incomplete_expired"].includes(s.status)) ?? null;
+}
+
 /**
  * Opens a Stripe Checkout for the Pro plan. The plan only changes when the
  * webhook confirms the payment — never from here.
@@ -46,6 +52,18 @@ export async function createCheckoutSession(workspaceSlug: string): Promise<Bill
 
   try {
     const customer = await stripeCustomerId(workspace.id);
+    // workspaces.plan only changes when the webhook arrives: ask Stripe too, so a second
+    // click (or a second admin) in the meantime doesn't start a second subscription.
+    const live = customer ? await findLiveSubscription(customer) : null;
+    if (live) {
+      return {
+        ok: false,
+        error: ["past_due", "unpaid"].includes(live.status)
+          ? "A assinatura deste workspace tem um pagamento pendente. Regularize em \"Gerenciar assinatura\"."
+          : "Este workspace já tem uma assinatura. Atualize a página em alguns segundos.",
+      };
+    }
+
     const billingUrl = `${siteOrigin()}/${workspace.slug}/settings/billing`;
     // Read by the webhook to know which workspace to upgrade (and who subscribed).
     const metadata = { workspace_id: workspace.id, user_id: user.id };
