@@ -100,9 +100,13 @@ export async function listLeads(workspaceId: string, filters: LeadFilters) {
     .range(start, start + LEADS_PAGE_SIZE - 1);
 
   // PGRST103: page past the end (e.g. a stale link after deletions).
-  if (error?.code === "PGRST103") return { leads: [] as Lead[], total: count ?? 0 };
+  if (error?.code === "PGRST103") return { leads: [] as Lead[], total: count ?? 0, searchBlocked: false };
+  // A search term that looks like SQL injection (e.g. "' or 1=1 --") is blocked by
+  // the firewall in front of Supabase with an HTML page (no PostgREST code): show
+  // "no results for this search" instead of breaking the whole page.
+  if (error && filters.q && !error.code) return { leads: [] as Lead[], total: 0, searchBlocked: true };
   if (error) throw error;
-  return { leads: data, total: count ?? 0 };
+  return { leads: data, total: count ?? 0, searchBlocked: false };
 }
 
 /** A lead of this workspace, or null. Cached per request (metadata + page both call it). */

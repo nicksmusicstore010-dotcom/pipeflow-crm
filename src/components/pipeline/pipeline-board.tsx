@@ -165,9 +165,11 @@ export function PipelineBoard({
         // On success the screen already matches the server; the refreshed props arrive on their own.
         if (!result.ok) {
           // Undo on screen, then reload the real board (someone may have changed it meanwhile).
+          // Not when offline: a refresh that can't reach the server becomes a full page
+          // load, which drops the user on the browser's "no internet" page.
           setColumns(before);
           toastActionError(result);
-          router.refresh();
+          if (result !== NETWORK_ERROR) router.refresh();
         }
       });
   }

@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { safeNextPath } from "@/lib/safe-redirect";
@@ -47,7 +48,12 @@ export async function updateSession(request: NextRequest) {
   // first call so the session is refreshed before anything reads it.
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser();
+
+  // Supabase unreachable: we can't tell whether there is a session. Don't log the
+  // user out by redirecting to /login; the page itself shows the connection error.
+  if (error && isAuthRetryableFetchError(error)) return response;
 
   const { pathname, search } = request.nextUrl;
 

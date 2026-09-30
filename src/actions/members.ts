@@ -29,6 +29,7 @@ const DB_ERRORS: Record<string, string> = {
   invite_used: "Este convite já foi usado.",
   invite_expired: "Este convite expirou. Peça um novo a quem te convidou.",
   invite_wrong_email: "Este convite foi enviado para outro e-mail. Entre com a conta do e-mail convidado.",
+  rate_limited: "Muitos convites enviados na última hora. Aguarde um pouco e tente novamente.",
 };
 
 function dbError(error: { message: string; code?: string }, fallback: string): ActionFailure {

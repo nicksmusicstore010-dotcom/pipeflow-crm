@@ -18,7 +18,8 @@ export function AcceptInviteButton({ token, workspaceName }: { token: string; wo
       const result = await acceptInvite(token).catch(() => NETWORK_ERROR);
       if (!result.ok) {
         toastActionError(result);
-        router.refresh();
+        // Offline: a refresh would turn into a full page load on the browser's error page.
+        if (result !== NETWORK_ERROR) router.refresh();
         return;
       }
       toast.success(`Bem-vindo a ${workspaceName}!`);

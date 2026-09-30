@@ -10,9 +10,9 @@ type PlanLimits = {
 };
 
 /**
- * Plan limits — single source of truth for the app. The member limit is also
- * enforced by the database (`plan_member_limit()` in the collaboration
- * migration), so a change here needs a migration too.
+ * Plan limits — single source of truth for the app. Both limits are also
+ * enforced by the database (`plan_member_limit()` and `plan_lead_limit()`),
+ * so a change here needs a migration too.
  */
 export const PLAN_LIMITS: Record<WorkspacePlan, PlanLimits> = {
   free: { members: 2, leads: 50 },

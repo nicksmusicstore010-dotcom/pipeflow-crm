@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useFormState } from "react-dom";
 
 import { signup, type AuthFormState } from "@/actions/auth";
 import { FormMessage } from "@/components/auth/form-message";
@@ -9,10 +8,11 @@ import { SubmitButton } from "@/components/auth/submit-button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useActionFormState } from "@/hooks/use-action-form-state";
 
 /** `next`: where to land after confirming (e.g. an invite); `defaultEmail`: prefilled (invited address). */
 export function SignupForm({ next, defaultEmail }: { next?: string; defaultEmail?: string }) {
-  const [state, formAction] = useFormState<AuthFormState, FormData>(signup, {});
+  const [state, formAction] = useActionFormState<AuthFormState>(signup, {});
   const loginHref = next ? `/login?next=${encodeURIComponent(next)}` : "/login";
 
   if (state.success) {

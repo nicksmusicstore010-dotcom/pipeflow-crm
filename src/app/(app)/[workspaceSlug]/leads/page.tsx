@@ -31,7 +31,7 @@ export default async function LeadsPage({
   if (!workspace || !user) notFound();
 
   const filters = parseLeadFilters(searchParams);
-  const [{ leads, total }, members, quota] = await Promise.all([
+  const [{ leads, total, searchBlocked }, members, quota] = await Promise.all([
     listLeads(workspace.id, filters),
     getWorkspaceMembers(workspace.id),
     canAddLead(workspace),
@@ -96,7 +96,11 @@ export default async function LeadsPage({
             <EmptyState
               icon={SearchX}
               title="Nenhum lead encontrado"
-              description="Nenhum lead corresponde à busca e aos filtros aplicados."
+              description={
+                searchBlocked
+                  ? "Não foi possível buscar por esse termo. Tente com outras palavras."
+                  : "Nenhum lead corresponde à busca e aos filtros aplicados."
+              }
               action={
                 <Button variant="outline" asChild>
                   <Link href={basePath}>Limpar filtros</Link>

@@ -46,6 +46,8 @@ export async function createLead(workspaceSlug: string, input: unknown): Promise
     .insert({ ...toLeadRow(parsed.data), workspace_id: workspace.id })
     .select("id")
     .single();
+  // The database enforces the limit too (enforce_lead_limit trigger), e.g. two tabs at once.
+  if (error?.message === "plan_limit") return { ok: false, error: leadLimitError(workspace.plan, quota.limit) };
   if (error) return { ok: false, error: writeError(error.code) };
 
   // Whole workspace: lead counts also show on the dashboard.
@@ -128,6 +130,7 @@ export async function createSampleLeads(workspaceSlug: string): Promise<ActionRe
   if (!quota.allowed) return { ok: false, error: leadLimitError(workspace.plan, quota.limit) };
 
   const { error } = await supabase.from("leads").insert(rows);
+  if (error?.message === "plan_limit") return { ok: false, error: leadLimitError(workspace.plan, quota.limit) };
   if (error) return { ok: false, error: "Não foi possível carregar os exemplos. Tente novamente." };
 
   revalidatePath(`/${workspace.slug}`, "layout");
