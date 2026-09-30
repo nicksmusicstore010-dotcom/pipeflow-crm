@@ -68,13 +68,15 @@ export function LeadDeals({
               <button
                 type="button"
                 onClick={() => setEditing(deal)}
-                className="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 text-left hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
+                className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1.5 px-4 py-3 text-left hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none sm:grid-cols-[minmax(0,1fr)_auto_auto]"
               >
-                <span className="min-w-0 flex-1 basis-40 truncate text-sm font-medium">{deal.title}</span>
-                <StageBadge stage={deal.stage} />
-                {deal.due_date && <DueDateLabel dueDate={deal.due_date} stage={deal.stage} today={today} />}
-                <span className="w-28 text-right text-sm font-semibold tabular-nums">
+                <span className="truncate text-sm font-medium">{deal.title}</span>
+                <span className="text-right text-sm font-semibold tabular-nums sm:order-last sm:w-28">
                   {formatCurrency(deal.value_cents)}
+                </span>
+                <span className="col-span-2 flex flex-wrap items-center gap-x-3 gap-y-1 sm:col-span-1">
+                  <StageBadge stage={deal.stage} />
+                  {deal.due_date && <DueDateLabel dueDate={deal.due_date} stage={deal.stage} today={today} />}
                 </span>
               </button>
             </li>

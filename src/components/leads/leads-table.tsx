@@ -25,9 +25,9 @@ export function LeadsTable({
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead className="hidden md:table-cell">Empresa</TableHead>
-            <TableHead className="hidden lg:table-cell">Telefone</TableHead>
+            <TableHead className="hidden 2xl:table-cell">Telefone</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead className="hidden sm:table-cell">Responsável</TableHead>
+            <TableHead className="hidden xl:table-cell">Responsável</TableHead>
             <TableHead className="hidden text-right xl:table-cell">Criado em</TableHead>
           </TableRow>
         </TableHeader>
@@ -36,7 +36,7 @@ export function LeadsTable({
             const ownerName = lead.owner_id ? memberName.get(lead.owner_id) : undefined;
             return (
               <TableRow key={lead.id}>
-                <TableCell className="max-w-[16rem]">
+                <TableCell className="max-w-[11rem] sm:max-w-[16rem]">
                   <Link
                     href={`/${workspaceSlug}/leads/${lead.id}`}
                     className="block truncate font-medium hover:text-primary hover:underline"
@@ -44,6 +44,10 @@ export function LeadsTable({
                     {lead.name}
                   </Link>
                   {lead.email && <span className="block truncate text-xs text-muted-foreground">{lead.email}</span>}
+                  {/* Company column is hidden below md: show it here instead. */}
+                  {lead.company && (
+                    <span className="block truncate text-xs text-muted-foreground md:hidden">{lead.company}</span>
+                  )}
                 </TableCell>
                 <TableCell className="hidden max-w-[14rem] md:table-cell">
                   <span className="block truncate">{lead.company ?? "—"}</span>
@@ -51,11 +55,11 @@ export function LeadsTable({
                     <span className="block truncate text-xs text-muted-foreground">{lead.position}</span>
                   )}
                 </TableCell>
-                <TableCell className="hidden whitespace-nowrap lg:table-cell">{lead.phone ?? "—"}</TableCell>
+                <TableCell className="hidden whitespace-nowrap 2xl:table-cell">{lead.phone ?? "—"}</TableCell>
                 <TableCell>
                   <LeadStatusBadge status={lead.status} />
                 </TableCell>
-                <TableCell className="hidden sm:table-cell">
+                <TableCell className="hidden max-w-[12rem] xl:table-cell">
                   {ownerName ? (
                     <span className="flex items-center gap-2">
                       <UserAvatar name={ownerName} size="sm" />

@@ -334,6 +334,24 @@ Branch: `feat/deploy`. Nova varredura depois do Pix e do Next 16: banco remoto (
 
 ---
 
+## Responsividade e polish visual (aula 5.2, 30/09/2026) ✅
+
+Branch: `feat/deploy`. Build de produção + Playwright/Edge com usuário de teste (admin e membro, workspace com dados longos de propósito e um workspace vazio; apagados depois): 16 páginas × celular 375 px, tablet 768 px e desktop 1440 px, gaveta de navegação aberta, visão do membro, tema claro; medição automática de rolagem horizontal e elementos saindo da tela + revisão das capturas.
+
+- [x] **Kanban alargava a página inteira no celular e no tablet** (950 px numa tela de 375): os textos `sr-only` dos cards (`position: absolute`) escapavam do contêiner com rolagem, que não era `relative`. Agora só o quadro rola
+- [x] **Dashboard no celular com 11 px de rolagem lateral**: a tabela para leitor de tela do funil ignora `width: 1px`; passou para dentro de uma caixa `sr-only`
+- [x] **Detalhe do lead com e-mail longo ocupava 595 px no celular** (grid sem colunas explícitas cresce com o conteúdo) → `grid-cols-1`; contato mostra o valor inteiro quebrando linha em vez de cortar
+- [x] **Negócios do lead**: no celular o valor ficava desalinhado → título + valor na primeira linha, etapa e prazo embaixo
+- [x] **Tabela de leads cortava o status no celular e o responsável no tablet** → colunas aparecem conforme a largura da área de conteúdo (a sidebar ocupa 16rem a partir de `lg`): celular = nome (com e-mail e empresa) + status; tablet = + empresa; `xl` = + responsável e data; `2xl` = + telefone
+- [x] **Formulário do Pix estourava o card no tablet** (dois cards de plano lado a lado) → quebra pela largura do card
+- [x] **Breadcrumb cortava o nome da página** ("L…", "Da…") para caber o nome do workspace → a página nunca corta, o workspace cede
+- [x] **Carregamento**: skeletons no formato de cada página — Pipeline (colunas com cards), detalhe do lead (antes herdava o skeleton de tabela da listagem) e Configurações. Dashboard e Leads já tinham
+- [x] Estados vazios revisados (dashboard, leads, busca sem resultado, pipeline, negócios do lead, prazos, lead inexistente, acesso restrito do membro): já tinham ícone, frase e CTA
+- [x] Verificação final: 16 páginas × 3 tamanhos sem rolagem horizontal e sem erros de console; `tsc`, lint e build sem erros
+- [ ] Skeletons novos não foram capturados em tela (aparecem só durante o carregamento); conferir numa rede lenta
+
+---
+
 ## 9. Landing page ⬜
 
 - [ ] Hero com proposta de valor e CTA
