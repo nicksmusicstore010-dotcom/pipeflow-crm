@@ -1,40 +1,58 @@
 import Link from "next/link";
+import { ArrowRight, Check } from "lucide-react";
 
-import { Logo } from "@/components/layout/logo";
+import { FaqSection } from "@/components/marketing/faq-section";
+import { FeaturesSection } from "@/components/marketing/features-section";
+import { FinalCta } from "@/components/marketing/final-cta";
+import { HeroPreview } from "@/components/marketing/hero-preview";
+import { HowItWorks } from "@/components/marketing/how-it-works";
+import { PricingSection } from "@/components/marketing/pricing-section";
 import { Button } from "@/components/ui/button";
 
-// Placeholder: the full landing page (features, pricing, CTA) is Milestone 9.
+const HIGHLIGHTS = ["Grátis para começar", "Sem cartão de crédito", "Pix ou cartão no Pro"];
+
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4">
-        <Logo />
-        <nav className="flex items-center gap-2">
-          <Button variant="ghost" asChild>
-            <Link href="/login">Entrar</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/signup">Começar grátis</Link>
-          </Button>
-        </nav>
-      </header>
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-4 py-20 text-center">
-        <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-5xl">
-          Organize suas vendas sem complicação
-        </h1>
-        <p className="mt-4 max-w-xl text-balance text-lg text-muted-foreground">
-          Leads, pipeline Kanban e métricas em um só lugar. Feito para pequenas empresas, freelancers
-          e times de vendas.
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button size="lg" asChild>
-            <Link href="/signup">Criar conta grátis</Link>
-          </Button>
-          <Button size="lg" variant="outline" asChild>
-            <Link href="/login">Já tenho conta</Link>
-          </Button>
+    <>
+      <section className="overflow-hidden py-16 sm:py-24">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 lg:grid-cols-[1fr_1.1fr]">
+          <div className="text-center lg:text-left">
+            <p className="text-sm font-medium text-primary">CRM para pequenas empresas e times de vendas</p>
+            <h1 className="mt-3 text-balance text-4xl font-bold tracking-tight sm:text-5xl">
+              Organize suas vendas sem complicação
+            </h1>
+            <p className="mt-4 text-balance text-lg text-muted-foreground">
+              Leads, pipeline Kanban, histórico de atividades e métricas em um só lugar. Mais simples que o HubSpot,
+              com plano grátis de verdade.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
+              <Button size="lg" asChild>
+                <Link href="/signup">
+                  Criar conta grátis
+                  <ArrowRight />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link href="/login">Já tenho conta</Link>
+              </Button>
+            </div>
+            <ul className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground lg:justify-start">
+              {HIGHLIGHTS.map((item) => (
+                <li key={item} className="flex items-center gap-1.5">
+                  <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <HeroPreview />
         </div>
-      </main>
-    </div>
+      </section>
+      <FeaturesSection />
+      <HowItWorks />
+      <PricingSection />
+      <FaqSection />
+      <FinalCta />
+    </>
   );
 }

@@ -3,17 +3,24 @@ import { Inter } from "next/font/google";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { publicSiteUrl } from "@/lib/site-url-public";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
+const description =
+  "CRM simples para pequenas empresas e times de vendas: leads, pipeline Kanban e métricas em um só lugar.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(publicSiteUrl()),
   title: {
     default: "PipeFlow CRM",
     template: "%s · PipeFlow CRM",
   },
-  description:
-    "CRM simples para pequenas empresas e times de vendas: leads, pipeline Kanban e métricas em um só lugar.",
+  description,
+  // The image comes from app/opengraph-image.tsx.
+  openGraph: { type: "website", locale: "pt_BR", siteName: "PipeFlow CRM", title: "PipeFlow CRM", description },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({

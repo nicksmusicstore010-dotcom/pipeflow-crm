@@ -4,7 +4,7 @@ import type Stripe from "stripe";
 import { z } from "zod";
 
 import { isPixMonths, PRO_MONTHLY_CENTS } from "@/lib/plans";
-import { getStripe } from "@/lib/stripe";
+import { getProPriceId, getStripe } from "@/lib/stripe";
 import { isSubscriptionStatus, PRO_STATUSES } from "@/lib/subscription-status";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -81,12 +81,33 @@ async function refreshWorkspacePlan(admin: AdminClient, workspaceId: string, cus
   return plan;
 }
 
+let proProductId: Promise<string> | null = null;
+
+/** Product of the Pro price (cached). A price change inside it keeps subscribers Pro. */
+function getProProductId() {
+  proProductId ??= getStripe()
+    .prices.retrieve(getProPriceId())
+    .then((price) => stripeId(price.product)!)
+    .catch((error) => {
+      proProductId = null;
+      throw error;
+    });
+  return proProductId;
+}
+
 /**
  * Copies the subscription's current state from Stripe (fetched again, so events
  * arriving out of order or twice don't matter) and updates the workspace plan.
  */
 export async function syncSubscription(subscriptionId: string, workspaceHint: string | null = null) {
   const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
+  // Only the Pro product counts: another product sold on the same Stripe account
+  // (to the same customer) must not unlock Pro.
+  const proProduct = await getProProductId();
+  if (!subscription.items.data.some((item) => stripeId(item.price.product) === proProduct)) {
+    console.warn(`[stripe] subscription ${subscription.id} is not for the Pro product; ignored.`);
+    return null;
+  }
   const admin = createAdminClient();
 
   const workspaceId = await findWorkspaceId(admin, subscription, workspaceHint);

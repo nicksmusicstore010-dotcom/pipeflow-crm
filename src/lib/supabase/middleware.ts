@@ -6,7 +6,7 @@ import { safeNextPath } from "@/lib/safe-redirect";
 
 import { getSupabaseEnv, SUPABASE_COOKIE_OPTIONS } from "./env";
 
-const PUBLIC_PATHS = ["/", "/pricing", "/forgot-password"];
+const PUBLIC_PATHS = ["/", "/pricing", "/forgot-password", "/robots.txt", "/sitemap.xml"];
 const AUTH_PATHS = ["/login", "/signup"];
 // Resolves to the last (or first) workspace, or to /onboarding.
 const AFTER_LOGIN_PATH = "/app";
@@ -17,7 +17,9 @@ function isPublic(pathname: string) {
     AUTH_PATHS.includes(pathname) ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/invite/") ||
-    pathname.startsWith("/api/webhooks/")
+    pathname.startsWith("/api/webhooks/") ||
+    // Link previews (WhatsApp, LinkedIn...) fetch it without a session.
+    pathname.startsWith("/opengraph-image")
   );
 }
 

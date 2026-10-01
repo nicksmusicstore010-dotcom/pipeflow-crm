@@ -57,7 +57,7 @@ src/
   lib/
     supabase/               # client.ts (browser), server.ts (RSC/actions), middleware.ts (sessão, chamado por src/proxy.ts), admin.ts (service role)
     stripe.ts               # cliente Stripe (server-only, sob demanda) + envs de preço e webhook
-    stripe-sync.ts          # lado do webhook: busca a assinatura no Stripe e grava subscriptions + workspaces.plan (chave secreta)
+    stripe-sync.ts          # lado do webhook: busca a assinatura no Stripe e grava subscriptions + workspaces.plan (chave secreta); só assinaturas do produto Pro contam
     billing.ts              # estado de cobrança da página /settings/billing (customer + última assinatura)
     subscription-status.ts  # status da assinatura: rótulos e quais mantêm o Pro
     limits.ts               # canAddLead() / canAddMember(): uso x limite do plano, checados no servidor
@@ -66,6 +66,7 @@ src/
     members.ts              # membros (com e-mail), convites pendentes e prévia do convite
     roles.ts                # papéis admin/membro e rótulos (pode ser importado no cliente)
     site-url.ts             # siteOrigin(): base dos links de e-mail e do Stripe (Origin só se for uma origem do próprio app)
+    site-url-public.ts      # publicSiteUrl(): endereço canônico para metadata, robots e sitemap (sem request)
     deal-stages.ts          # ordem, rótulos e cores das etapas do pipeline (fonte única)
     lead-status.ts          # status dos leads: ordem, rótulos e cores (fonte única)
     activity-types.ts       # tipos de atividade: ordem, rótulos, ícones e cores (fonte única)

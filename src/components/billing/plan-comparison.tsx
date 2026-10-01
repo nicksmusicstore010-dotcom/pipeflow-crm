@@ -10,8 +10,20 @@ const PLANS: { plan: WorkspacePlan; description: string }[] = [
   { plan: "pro", description: "Para times que querem crescer sem limites." },
 ];
 
-/** Free × Pro side by side; `action` goes in the Pro card (e.g. "Assinar Pro"). */
-export function PlanComparison({ currentPlan, action }: { currentPlan: WorkspacePlan; action?: React.ReactNode }) {
+/**
+ * Free × Pro side by side. `action` goes in the Pro card (e.g. "Assinar Pro"),
+ * `freeAction` in the Free one (the landing page's sign-up CTA).
+ */
+export function PlanComparison({
+  currentPlan,
+  action,
+  freeAction,
+}: {
+  /** Shows the "Plano atual" badge; left out on the public pricing page. */
+  currentPlan?: WorkspacePlan;
+  action?: React.ReactNode;
+  freeAction?: React.ReactNode;
+}) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {PLANS.map(({ plan, description }) => {
@@ -42,6 +54,7 @@ export function PlanComparison({ currentPlan, action }: { currentPlan: Workspace
                 ))}
               </ul>
               {plan === "pro" && action && <div className="mt-auto">{action}</div>}
+              {plan === "free" && freeAction && <div className="mt-auto">{freeAction}</div>}
             </CardContent>
           </Card>
         );
