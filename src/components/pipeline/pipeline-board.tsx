@@ -214,7 +214,7 @@ export function PipelineBoard({
         }}
       >
         {/* Negative margins let the board scroll edge to edge on small screens. */}
-        <div className="-mx-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="relative -mx-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           <div className="flex items-start gap-4">
             {DEAL_STAGES.map((stage) => (
               <BoardColumn

@@ -319,6 +319,50 @@ Varredura do app inteiro depois do milestone 8: código (auth, redirects, Server
 
 ---
 
+## Auditoria de segurança pré-deploy (aula 5.1, 30/09/2026) ✅
+
+Branch: `feat/deploy`. Nova varredura depois do Pix e do Next 16: banco remoto (RLS de todas as tabelas, policies, grants por tabela e por coluna, funções `SECURITY DEFINER`, schema `private`, `pg_cron`, `supabase db advisors`), proxy/auth/redirects, todas as Server Actions, webhook do Stripe, e-mail do convite, cabeçalhos, `npm audit`, envs `NEXT_PUBLIC_` e histórico do Git.
+
+- [x] **RLS ativo nas 9 tabelas do `public`** (activities, deals, leads, pix_payments, profiles, subscriptions, workspace_invites, workspace_members, workspaces), todas com policies; `private.rate_limit_events` sem RLS mas fora da API (sem `USAGE` no schema para `anon`/`authenticated`)
+- [x] **Isolamento entre workspaces testado no projeto real** (script com 2 usuários temporários, chave publicável + JWT de cada um, direto na API — sem passar pelo app; apagados depois): **54/54** — B não lê nenhuma tabela de A (filtrando pelo id de A nem sem filtro), não insere/altera/exclui leads, negócios, atividades, membros, convites nem o workspace de A, não vincula lead de A nem põe A como responsável, não move `workspace_id`, não vira Pro (`plan`/`pro_until`), RPCs (`deal_stage_totals`, `list_workspace_members`, `create_workspace_invite`, `move_deal`, `is_user_in_workspace`, `is_workspace_member`, `shares_workspace_with`, `apply_pix_payment`) não vazam nem agem em A; anônimo sem acesso a nada
+- [x] **Slug de workspace podia esconder rotas do app** (`create_workspace` direto com `p_slug = 'login'` criou o workspace `/login`; admins também podiam trocar o slug pela API) → constraint `workspaces_slug_not_reserved` com a mesma lista de `RESERVED_SLUGS` (migration `20260930180000_security_audit.sql`)
+- [x] **Negócios e atividades sem limite de volume** (uma conta Free inseriu 501 atividades, ~1 MB, numa chamada; repetido, lota o banco de todos os clientes) → trigger `rate_limit_insert`: 300 inserções/hora por usuário em cada tabela (service role não conta; lote recusado não gasta a cota); mensagem `RATE_LIMITED` nas actions
+- [x] **Nome de quem convida no e-mail vinha de `user_metadata`** (editável pelo próprio usuário na API do Auth, sem limite — entrava no assunto e no corpo do e-mail) → vem de `profiles.full_name` (≤ 100, checado no banco), como na página do convite
+- [x] Verificado sem mudança: proxy e `safeNextPath`, `/auth/callback`, CSP e cabeçalhos, Server Actions (Zod + sessão + papel + RLS), busca com `.ilike()` parametrizado, webhook (assinatura no corpo cru, estado relido do Stripe, valor do Pix conferido), chave secreta só em `stripe-sync.ts`, sem `dangerouslySetInnerHTML`, e-mail com HTML escapado, `npm audit` 0 (inclusive dev), histórico do Git sem segredos, advisors só com os avisos esperados
+- [x] **Migration aplicada no remoto (01/10/2026, aula 5.3)** e teste de isolamento de novo: **57/57** (slug reservado recusado, 501 atividades de uma vez barradas, 20 atividades normais passam); tipos gerados sem mudança
+- [ ] Recomendado depois: CSP com nonce (hoje `script-src 'unsafe-inline'`; os cookies de sessão do `@supabase/ssr` não são httpOnly, então um XSS leria a sessão) — exige renderização dinâmica em todas as páginas
+
+---
+
+## Responsividade e polish visual (aula 5.2, 30/09/2026) ✅
+
+Branch: `feat/deploy`. Build de produção + Playwright/Edge com usuário de teste (admin e membro, workspace com dados longos de propósito e um workspace vazio; apagados depois): 16 páginas × celular 375 px, tablet 768 px e desktop 1440 px, gaveta de navegação aberta, visão do membro, tema claro; medição automática de rolagem horizontal e elementos saindo da tela + revisão das capturas.
+
+- [x] **Kanban alargava a página inteira no celular e no tablet** (950 px numa tela de 375): os textos `sr-only` dos cards (`position: absolute`) escapavam do contêiner com rolagem, que não era `relative`. Agora só o quadro rola
+- [x] **Dashboard no celular com 11 px de rolagem lateral**: a tabela para leitor de tela do funil ignora `width: 1px`; passou para dentro de uma caixa `sr-only`
+- [x] **Detalhe do lead com e-mail longo ocupava 595 px no celular** (grid sem colunas explícitas cresce com o conteúdo) → `grid-cols-1`; contato mostra o valor inteiro quebrando linha em vez de cortar
+- [x] **Negócios do lead**: no celular o valor ficava desalinhado → título + valor na primeira linha, etapa e prazo embaixo
+- [x] **Tabela de leads cortava o status no celular e o responsável no tablet** → colunas aparecem conforme a largura da área de conteúdo (a sidebar ocupa 16rem a partir de `lg`): celular = nome (com e-mail e empresa) + status; tablet = + empresa; `xl` = + responsável e data; `2xl` = + telefone
+- [x] **Formulário do Pix estourava o card no tablet** (dois cards de plano lado a lado) → quebra pela largura do card
+- [x] **Breadcrumb cortava o nome da página** ("L…", "Da…") para caber o nome do workspace → a página nunca corta, o workspace cede
+- [x] **Carregamento**: skeletons no formato de cada página — Pipeline (colunas com cards), detalhe do lead (antes herdava o skeleton de tabela da listagem) e Configurações. Dashboard e Leads já tinham
+- [x] Estados vazios revisados (dashboard, leads, busca sem resultado, pipeline, negócios do lead, prazos, lead inexistente, acesso restrito do membro): já tinham ícone, frase e CTA
+- [x] Verificação final: 16 páginas × 3 tamanhos sem rolagem horizontal e sem erros de console; `tsc`, lint e build sem erros
+- [ ] Skeletons novos não foram capturados em tela (aparecem só durante o carregamento); conferir numa rede lenta
+
+---
+
+## Deploy em produção (aula 5.3, 01/10/2026) 🚧
+
+Branch: `feat/deploy` → `main`. Produção: **https://pipeflow-crm-olive.vercel.app** (projeto Vercel `pipeflow-crm`).
+
+- [x] Migration `20260930180000_security_audit.sql` aplicada no Supabase de produção (`db push`); isolamento 57/57; advisors só com os avisos esperados; `npm audit` 0
+- [x] `tsc`, lint e build de produção local sem erros
+- [x] **`pipeflow.vercel.app` não é deste projeto** (é um "Lovable App" de terceiros): o webhook do Stripe **nunca** deve apontar para lá. URL certa: `https://pipeflow-crm-olive.vercel.app/api/webhooks/stripe`, com os 7 eventos do `.env.example` (com só 3, cancelamento agendado, reativação e o Pix não chegam). O segredo de assinatura começa com `whsec_` (não existe `whsec_live_`)
+- [ ] **Stripe na produção (você):** a Vercel de produção ainda não tem nenhuma variável do Stripe, então a cobrança mostra "pagamentos ainda não configurados". Ativar a conta Stripe → `npm run stripe:go-live` (cria produto/preço, portal, o webhook com os 7 eventos na URL certa, grava as envs na Vercel e republica) → pagar com cartão real e reembolsar. Chaves de teste na produção não: qualquer um viraria Pro com o cartão 4242
+
+---
+
 ## 9. Landing page ⬜
 
 - [ ] Hero com proposta de valor e CTA

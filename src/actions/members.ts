@@ -69,8 +69,13 @@ export async function inviteMember(workspaceSlug: string, input: unknown): Promi
   });
   if (error) return dbError(error, "Não foi possível criar o convite. Tente novamente.");
 
+  // From profiles (≤ 100 chars, checked in the database), like the invite page, not from
+  // user_metadata: any user can set that to anything through the Auth API.
   const user = await getCurrentUser();
-  const inviterName = (user?.user_metadata.full_name as string | undefined)?.trim() || user?.email || "Alguém";
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle()
+    : { data: null };
+  const inviterName = profile?.full_name?.trim() || user?.email || "Alguém";
   const link = `${await siteOrigin()}/invite/${token}`;
   const emailSent = await sendEmail({
     to: parsed.data.email,

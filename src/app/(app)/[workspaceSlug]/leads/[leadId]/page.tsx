@@ -82,7 +82,7 @@ export default async function LeadDetailPage(props: { params: Promise<Params> })
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-1">
           <Card className="rounded-lg shadow-sm">
             <CardHeader className="pb-3">
@@ -117,7 +117,7 @@ export default async function LeadDetailPage(props: { params: Promise<Params> })
               <CardTitle className="text-base">Detalhes</CardTitle>
             </CardHeader>
             <CardContent>
-              <dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3 text-sm">
+              <dl className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-3 text-sm">
                 <dt className="text-muted-foreground">Status</dt>
                 <dd>
                   <LeadStatusBadge status={lead.status} />
@@ -127,7 +127,7 @@ export default async function LeadDetailPage(props: { params: Promise<Params> })
                   {ownerName ? (
                     <span className="flex items-center gap-2">
                       <UserAvatar name={ownerName} size="sm" />
-                      {ownerName}
+                      <span className="min-w-0 break-words">{ownerName}</span>
                     </span>
                   ) : (
                     <span className="text-muted-foreground">Sem responsável</span>
@@ -190,7 +190,8 @@ function InfoRow({
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <div className="truncate">{children || <span className="text-muted-foreground">—</span>}</div>
+        {/* The whole value, wrapped: this is the page to read and copy it from. */}
+        <div className="break-words">{children || <span className="text-muted-foreground">—</span>}</div>
       </div>
     </div>
   );

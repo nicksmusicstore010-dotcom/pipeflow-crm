@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import type { ActionResult } from "@/lib/action-result";
+import { RATE_LIMITED, type ActionResult } from "@/lib/action-result";
 import { resolveWorkspace } from "@/lib/action-workspace";
 import { createClient } from "@/lib/supabase/server";
 import { fromSaoPauloInput } from "@/lib/utils";
@@ -62,6 +62,7 @@ export async function createActivity(
   if (error) {
     // FK: the lead was deleted meanwhile, or belongs to another workspace.
     if (error.code === "23503") return { ok: false, error: "Lead não encontrado. Ele pode ter sido excluído." };
+    if (error.message === "rate_limited") return { ok: false, error: RATE_LIMITED };
     return { ok: false, error: "Não foi possível registrar a atividade. Tente novamente." };
   }
 

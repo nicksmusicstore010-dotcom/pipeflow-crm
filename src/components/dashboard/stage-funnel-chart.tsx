@@ -69,25 +69,28 @@ export function StageFunnelChart({ stages }: { stages: StageTotal[] }) {
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <table className="sr-only">
-        <caption>Negócios por etapa</caption>
-        <thead>
-          <tr>
-            <th scope="col">Etapa</th>
-            <th scope="col">Negócios</th>
-            <th scope="col">Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.stage}>
-              <th scope="row">{row.label}</th>
-              <td>{row.count}</td>
-              <td>{formatCurrency(row.valueCents)}</td>
+      {/* A table ignores width: 1px, so the sr-only box around it does the clipping. */}
+      <div className="sr-only">
+        <table>
+          <caption>Negócios por etapa</caption>
+          <thead>
+            <tr>
+              <th scope="col">Etapa</th>
+              <th scope="col">Negócios</th>
+              <th scope="col">Valor</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.stage}>
+                <th scope="row">{row.label}</th>
+                <td>{row.count}</td>
+                <td>{formatCurrency(row.valueCents)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 }

@@ -5,7 +5,8 @@
  */
 export const LAST_WORKSPACE_COOKIE = "pf_workspace";
 
-// Top-level paths that a workspace slug must never shadow.
+// Top-level paths that a workspace slug must never shadow. The database refuses
+// them too (workspaces_slug_not_reserved): keep both lists in sync.
 const RESERVED_SLUGS = new Set([
   "admin",
   "api",

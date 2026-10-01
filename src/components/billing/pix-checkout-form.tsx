@@ -26,7 +26,7 @@ export function PixCheckoutForm({
   return (
     <div className="space-y-2">
       <Label htmlFor="pix-months">{renewing ? "Renovar com Pix por" : "Ou pague com Pix por"}</Label>
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-wrap gap-2">
         <Select value={String(months)} onValueChange={(value) => setMonths(Number(value) as PixMonths)}>
           <SelectTrigger id="pix-months" className="w-full sm:w-36 sm:shrink-0">
             <SelectValue />
@@ -44,7 +44,7 @@ export function PixCheckoutForm({
           target="pix"
           months={months}
           variant="outline"
-          className="flex-1"
+          className="flex-1 whitespace-nowrap"
           disabled={disabled}
         >
           Pagar {formatCurrency(months * PRO_MONTHLY_CENTS)} com Pix
