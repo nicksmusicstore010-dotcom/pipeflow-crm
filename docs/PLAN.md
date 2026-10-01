@@ -13,8 +13,8 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 | 5 | Atividades | ✅ |
 | 6 | Dashboard | ✅ |
 | 7 | Colaboração e permissões | ✅ |
-| 8 | Monetização (Stripe) | 🚧 |
-| 9 | Landing page | ⬜ |
+| 8 | Monetização (Stripe) | 🚧 (falta só a conta live) |
+| 9 | Landing page | ✅ |
 | 10 | API pública, onboarding e polimento | ⬜ |
 
 **Verificação padrão de todo milestone:** `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros, mais o teste manual descrito em "Pronto quando".
@@ -348,7 +348,7 @@ Branch: `feat/deploy`. Build de produção + Playwright/Edge com usuário de tes
 - [x] **Carregamento**: skeletons no formato de cada página — Pipeline (colunas com cards), detalhe do lead (antes herdava o skeleton de tabela da listagem) e Configurações. Dashboard e Leads já tinham
 - [x] Estados vazios revisados (dashboard, leads, busca sem resultado, pipeline, negócios do lead, prazos, lead inexistente, acesso restrito do membro): já tinham ícone, frase e CTA
 - [x] Verificação final: 16 páginas × 3 tamanhos sem rolagem horizontal e sem erros de console; `tsc`, lint e build sem erros
-- [ ] Skeletons novos não foram capturados em tela (aparecem só durante o carregamento); conferir numa rede lenta
+- [x] Skeletons conferidos com 3 s de latência simulada (01/10/2026): Pipeline, detalhe do lead e Configurações mostram o próprio formato durante o carregamento
 
 ---
 
@@ -377,17 +377,20 @@ Caça a bugs e falhas depois do deploy: corridas no banco, CSRF, cookies, redire
 - [x] Regressão no build local: geral 68/68, cartão 25/25, Pix 22/22, ponta a ponta 37/37, isolamento 57/57
 - [ ] Supabase Auth → Email Templates → **Reset password**: trocar o link para `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=recovery` (funciona em qualquer navegador; o padrão só funciona no navegador que pediu — nesse caso o app já explica e oferece novo link)
 - [ ] Recomendado: Supabase Auth → "Secure password change" (exige login recente para trocar a senha) — pelo painel, não por `config push`
-- [ ] Recomendado: o webhook aceita qualquer assinatura ativa do customer como Pro, sem conferir o preço; se a conta Stripe vender outros produtos, filtrar por `STRIPE_PRO_PRICE_ID`
+- [x] Webhook só conta assinaturas do **produto** Pro (o do `STRIPE_PRO_PRICE_ID`; um reajuste de preço no mesmo produto continua valendo). Testado na sandbox: assinatura ativa de outro produto com o `workspace_id` no metadata → workspace continua Free e nada é gravado; cartão 25/25
 
 ---
 
-## 9. Landing page ⬜
+## 9. Landing page ✅
 
-- [ ] Hero com proposta de valor e CTA
-- [ ] Funcionalidades (leads, Kanban, atividades, dashboard, multiempresa)
-- [ ] Planos e preços (Free × Pro)
-- [ ] CTA final + rodapé
-- [ ] SEO básico (metadata, Open Graph) e responsividade
+Branch: `feat/landing` (01/10/2026)
+
+- [x] Hero com proposta de valor, CTAs ("Criar conta grátis" / "Já tenho conta"), destaques e uma prévia estática do Kanban com as cores reais das etapas (`HeroPreview`, decorativa)
+- [x] Funcionalidades (leads, Kanban, atividades, dashboard, multiempresa, equipe com permissões) e "Como funciona" em 3 passos
+- [x] Planos e preços (Free × Pro) reaproveitando `PlanComparison` (agora com `currentPlan` opcional e `freeAction`), com Pix e cartão; página `/pricing` (antes referenciada no app e inexistente)
+- [x] Perguntas frequentes com `<details>` nativo (sem JS, teclado), CTA final e rodapé; cabeçalho com tema e âncoras
+- [x] SEO: `metadataBase`, Open Graph e Twitter card, imagem de compartilhamento gerada (`opengraph-image.tsx`, estática), `robots.txt` (só páginas públicas) e `sitemap.xml`; rotas liberadas no proxy
+- [x] Tudo estático (○) e Server Components. Verificado em 375/768/1440 px, tema escuro e claro: sem rolagem lateral nem erros de console
 
 **Pronto quando:** a landing funciona do celular ao desktop e os CTAs levam ao cadastro.
 
