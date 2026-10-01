@@ -24,7 +24,7 @@ export function LoginForm({
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Entrar</CardTitle>
+          <CardTitle className="text-xl" role="heading" aria-level={1}>Entrar</CardTitle>
           <CardDescription>Acesse sua conta para ver seu pipeline.</CardDescription>
         </CardHeader>
         <form action={formAction}>

@@ -15,7 +15,7 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 | 7 | Colaboração e permissões | ✅ |
 | 8 | Monetização (Stripe) | 🚧 (falta só a conta live) |
 | 9 | Landing page | ✅ |
-| 10 | API pública, onboarding e polimento | ⬜ |
+| 10 | API pública, onboarding e polimento | ✅ |
 
 **Verificação padrão de todo milestone:** `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros, mais o teste manual descrito em "Pronto quando".
 
@@ -396,13 +396,19 @@ Branch: `feat/landing` (01/10/2026)
 
 ---
 
-## 10. API pública, onboarding e polimento ⬜
+## 10. API pública, onboarding e polimento ✅
 
-- [ ] Chaves de API por workspace (criar/revogar em Configurações, armazenadas com hash)
-- [ ] Endpoints `/api/v1` para leads e negócios (listar, criar, atualizar), autenticados por chave
-- [ ] Onboarding guiado: checklist (criar lead, criar negócio, convidar colaborador)
+Branch: `feat/api-onboarding` (01/10/2026)
+
+- [x] Chaves de API por workspace: migration `20261001150000_api_keys.sql` (`api_keys` com SHA-256, RLS só admin e sem o hash; RPCs `create_api_key` — admin, até 10 ativas, 20/dia — e `revoke_api_key`; `authenticate_api_key` só service role, 120 req/min por chave; `move_deal` refatorada em `private.move_deal_in` + `api_move_deal` para a API). Testada em transação (arquivo via `db query -f`: o comando inline estourava o limite de linha do Windows sem avisar). Configurações → **API**: criar (chave exibida uma vez, com copiar), listar (prefixo, criada, último uso), revogar com confirmação, e a referência dos endpoints com exemplo `curl`
+- [x] Endpoints `/api/v1`: `GET /me`, `GET|POST /leads`, `GET|PATCH /leads/:id`, `GET|POST /deals`, `GET|PATCH /deals/:id`. JSON com `{ data, meta }` / `{ error: { code, message, details } }`, Zod estrito, 64 KB máx., paginação até 100, busca sem acento, limites do plano valendo
+- [x] Onboarding guiado: card "Primeiros passos" no dashboard (lead, negócio, atividade e — para admins — convite), marcado pelos dados reais (conta o que o time fez), barra de progresso, some quando tudo feito ou com "Ocultar" (cookie por workspace, sem piscar)
 - [x] Toggle de modo escuro (feito no esqueleto visual)
-- [ ] Revisão de acessibilidade, estados vazios, carregamento e erros
-- [ ] Deploy na Vercel + Supabase em produção
+- [x] Acessibilidade (axe-core, WCAG 2.1 A/AA + boas práticas, 12 telas × tema claro e escuro): de 5 tipos de problema para **0 violações** — contraste da primária e do destrutivo no tema escuro (indigo-400 com texto escuro), CTA final, `<main>` e `h1` nas telas de login/cadastro/senha/convite/onboarding, áreas roláveis da doc da API focáveis, âmbar do mini-Kanban, passos concluídos do onboarding sem opacidade
+- [x] Estados vazios, carregamento e erros revisados (aula 5.2 + skeletons em rede lenta)
+- [x] Deploy na Vercel + Supabase em produção (aula 5.3)
 
-**Pronto quando:** um cliente externo cria um lead via API e ele aparece no app; o app está publicado em produção.
+**Verificação (01/10/2026):** API + onboarding 49/49 (401 sem chave/inexistente/formato, `/me`, criar com e-mail normalizado e autor, 422 por campo/extra/owner de fora/lead de fora/valor/data, 400 JSON, 413, busca, filtros, paginação, isolamento — ler/alterar lead e negócio de outro workspace → 404 sem mudar nada —, PATCH com `null`, etapa renumerando sem buracos, limite do Free → 403, usuário não lê `key_hash` nem chama as RPCs de serviço, membro sem acesso, 120/min → 429, revogar → 401, onboarding com progresso e ocultar); regressão: geral 68/68, cartão 25/25, Pix 22/22, recuperação de senha 16/16, landing sem rolagem lateral, axe 0
+
+**Pronto quando:** um cliente externo cria um lead via API e ele aparece no app; o app está publicado em produção. ✅
+

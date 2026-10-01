@@ -66,7 +66,7 @@ export function hasActiveFilters(filters: LeadFilters) {
 const startOfDaySaoPaulo = (date: string) => new Date(`${date}T00:00:00-03:00`);
 
 /** Same as the database's search_normalize(): "João" → "joao". */
-function normalizeSearch(text: string) {
+export function normalizeSearch(text: string) {
   return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 

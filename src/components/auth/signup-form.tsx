@@ -19,7 +19,7 @@ export function SignupForm({ next, defaultEmail }: { next?: string; defaultEmail
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Verifique seu e-mail</CardTitle>
+          <CardTitle className="text-xl" role="heading" aria-level={1}>Verifique seu e-mail</CardTitle>
           <CardDescription>{state.success}</CardDescription>
         </CardHeader>
         <CardFooter>
@@ -34,7 +34,7 @@ export function SignupForm({ next, defaultEmail }: { next?: string; defaultEmail
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Criar conta</CardTitle>
+        <CardTitle className="text-xl" role="heading" aria-level={1}>Criar conta</CardTitle>
         <CardDescription>Comece grátis. Sem cartão de crédito.</CardDescription>
       </CardHeader>
       <form action={formAction}>

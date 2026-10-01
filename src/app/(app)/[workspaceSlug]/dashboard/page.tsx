@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarCheck, ChartBar, CircleDollarSign, Handshake, LayoutDashboard, Percent, Users } from "lucide-react";
 
+import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
 import { StageFunnelChart } from "@/components/dashboard/stage-funnel-chart";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { UpcomingDealsList } from "@/components/dashboard/upcoming-deals-list";
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardMetrics, listUpcomingDeals, UPCOMING_DAYS } from "@/lib/dashboard";
 import { countLeads } from "@/lib/leads";
+import { getOnboardingSteps, onboardingHiddenCookie } from "@/lib/onboarding";
 import { getCurrentUser } from "@/lib/session";
 import { formatCurrency, todaySaoPaulo } from "@/lib/utils";
 import { getWorkspaceBySlug } from "@/lib/workspaces";
@@ -33,10 +35,12 @@ export default async function DashboardPage(props: { params: Promise<{ workspace
   ]);
   const totalDeals = metrics.stages.reduce((sum, s) => sum + s.count, 0);
   const closed = metrics.wonCount + metrics.lostCount;
+  const onboarding = await getOnboardingSteps(workspace, { leads: totalLeads, deals: totalDeals });
 
   return (
     <>
       <PageHeader title="Dashboard" description="Visão geral das suas vendas." />
+      {onboarding && <OnboardingChecklist steps={onboarding} cookieName={onboardingHiddenCookie(workspace.id)} />}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Total de leads" value={totalLeads.toLocaleString("pt-BR")} icon={Users} />
         <StatCard label="Negócios abertos" value={metrics.openCount.toLocaleString("pt-BR")} icon={Handshake} />

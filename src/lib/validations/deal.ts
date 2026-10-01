@@ -9,7 +9,7 @@ const MAX_VALUE_CENTS = 1_000_000_000_000;
 const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /** A real calendar day as "yyyy-MM-dd" (what `<input type="date">` gives). */
-function isCalendarDay(value: string) {
+export function isCalendarDay(value: string) {
   const match = DAY.exec(value);
   if (!match) return false;
   const [year, month, day] = match.slice(1).map(Number);

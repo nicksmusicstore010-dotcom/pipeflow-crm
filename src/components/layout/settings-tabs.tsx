@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CreditCard, Users } from "lucide-react";
+import { Braces, CreditCard, Users } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { path: "/settings", label: "Membros", icon: Users },
   { path: "/settings/billing", label: "Cobrança", icon: CreditCard },
+  { path: "/settings/api", label: "API", icon: Braces },
 ];
 
 /** Sub-navigation of the settings pages. */

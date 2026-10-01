@@ -48,12 +48,12 @@ src/
       onboarding/           # criar primeiro workspace
     api/
       webhooks/stripe/      # route handler do webhook Stripe
-      v1/                   # API pública (integrações)
+      v1/                   # API pública: leads e deals (listar, criar, ler, atualizar) + /me, autenticada por chave de API
   components/
     ui/                     # componentes shadcn/ui (gerados, não editar à mão sem motivo)
     layout/                 # sidebar, header, workspace switcher
     shared/                 # peças genéricas reutilizadas entre domínios (ex.: UserAvatar)
-    leads/ pipeline/ activities/ dashboard/ members/ billing/ marketing/
+    leads/ pipeline/ activities/ dashboard/ members/ billing/ marketing/ api/
   lib/
     supabase/               # client.ts (browser), server.ts (RSC/actions), middleware.ts (sessão, chamado por src/proxy.ts), admin.ts (service role)
     stripe.ts               # cliente Stripe (server-only, sob demanda) + envs de preço e webhook
@@ -79,6 +79,9 @@ src/
     action-result.ts        # tipo de retorno das Server Actions ({ ok: true } | ActionFailure)
     action-workspace.ts     # resolveWorkspace(): sessão + workspace do slug, para Server Actions
     action-feedback.ts      # toast de erro de Server Action (sessão expirada, sem conexão)
+    api-keys.ts             # gerar/hash (SHA-256) e listar chaves de API
+    api/v1.ts               # núcleo da API pública: authenticate() (Bearer pf_…), erros { error: { code, message } }, readBody() com Zod, isMember()
+    onboarding.ts           # passos do "Primeiros passos" do dashboard (some quando tudo feito ou ao ocultar, por cookie)
     utils.ts                # cn(), formatCurrency(), formatDate(), initials()
   actions/                  # Server Actions por domínio (leads.ts, deals.ts, activities.ts, workspaces.ts...)
   hooks/                    # use-action-form-state.ts: useActionState que guarda o que foi digitado e mostra "sem conexão" no formulário
@@ -104,6 +107,7 @@ docs/
 - `deals` — workspace_id, lead_id, title, value_cents, stage, owner_id, due_date, position
 - `activities` — workspace_id, lead_id, author_id, type (`call` | `email` | `meeting` | `note`), description, occurred_at
 - `subscriptions` — id (`sub_...` do Stripe), workspace_id, stripe_customer_id, stripe_price_id, status, current_period_end, cancel_at_period_end. Só o webhook grava (chave secreta); só admins leem. `workspaces.plan` continua sendo o campo lido para os limites
+- `api_keys` — workspace_id, name, prefix (para exibir), key_hash (SHA-256; a chave só aparece uma vez, ao criar), created_by, last_used_at, revoked_at. Criar/revogar só pelas RPCs `create_api_key()` / `revoke_api_key()` (admin; até 10 ativas; 20 por dia); a API valida com `authenticate_api_key()` (service role; 120 req/min por chave)
 - `pix_payments` — id (`cs_...` da sessão do Checkout, garante que um webhook repetido não estende duas vezes), workspace_id, months, amount_cents, period_start/end. Gravado só por `apply_pix_payment()` (service role); admins leem
 
 Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `proposal_sent` → `negotiation` → `won` | `lost`. Rótulos na UI: Novo Lead, Contato Realizado, Proposta Enviada, Negociação, Fechado Ganho, Fechado Perdido.
@@ -129,6 +133,7 @@ Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `
 - Busca de leads usa a coluna gerada `search_text` (sem acentos, minúscula); normalize o termo do mesmo jeito antes do `ilike`. O firewall (Cloudflare) na frente do Supabase bloqueia termos com cara de SQL injection com uma página HTML (erro sem `code`): `listLeads` devolve `searchBlocked` em vez de quebrar a página.
 - **Qualquer usuário logado pode chamar a API do Supabase direto** (chave publicável + JWT dele), sem passar pelas Server Actions. Toda regra de negócio que importa (limites de plano, quem pode editar, colunas imutáveis) precisa valer no banco: RLS, grants por coluna, triggers e RPCs.
 - Rate limits no banco via `private.hit_rate_limit(ação, máx, janela)` (schema `private`, fora da API): convites 20/hora e workspaces 10/dia por usuário (nas RPCs) e 300 inserções/hora de negócios e de atividades (trigger `rate_limit_insert`; service role não conta) — o banco levanta `rate_limited` (`RATE_LIMITED` em `lib/action-result.ts`). Slugs reservados (`RESERVED_SLUGS` em `lib/workspace-slug.ts`) também são recusados pelo banco: mantenha as duas listas iguais.
+- **API pública (`/api/v1`)** usa a chave secreta (sem sessão, sem RLS): toda consulta filtra pelo `workspace_id` da chave e reaplica o que o RLS garante no app — responsável precisa ser membro (`isMember`), `lead_id` de outro workspace é barrado pela FK composta, mudar etapa só por `api_move_deal()`. Corpos com `z.strictObject` (campo desconhecido = 422). Limites do plano valem (triggers). O proxy não toca em `/api/`.
 - Cabeçalhos de segurança e CSP em `next.config.mjs`. O navegador só fala com o próprio app (`connect-src 'self'`; Supabase e Stripe são chamados do servidor): script, fonte ou API externa no cliente exige atualizar a CSP.
 - Cookies de sessão com `Secure` em produção (`SUPABASE_COOKIE_OPTIONS` em `lib/supabase/env.ts`, usado pelos dois clients do servidor): por isso o build de produção só loga via HTTPS ou `localhost`, não por IP da rede em http.
 - Recuperação de senha: `/forgot-password` → e-mail com link para `/auth/callback?next=/reset-password` (erros do link voltam para `/forgot-password`) → `/reset-password` grava a nova senha e desconecta os outros aparelhos. Resposta igual exista ou não a conta.
@@ -156,7 +161,7 @@ Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `
 
 Referências: **Pipedrive** (clareza do pipeline), **HubSpot** (organização de contatos), **DataCrazy**. Princípio: **simples, limpo e focado em vendas** — menos menus, menos cliques.
 
-- **Cor primária:** indigo/violeta (`indigo-600` / hover `indigo-700`), configurada como `--primary` nos tokens do shadcn/ui.
+- **Cor primária:** indigo/violeta (`indigo-600` / hover `indigo-700`), configurada como `--primary` nos tokens do shadcn/ui. No tema escuro é `indigo-400` com texto escuro nos botões (`--primary-foreground`): é o único jeito de a mesma cor passar no contraste AA como fundo de botão e como texto de link. Idem `--destructive`.
 - **Neutros:** escala `slate` do Tailwind; fundo do app `slate-50`, cards brancos com borda `slate-200`.
 - **Semânticas:** sucesso `emerald` (Fechado Ganho), erro `rose` (Fechado Perdido), alerta `amber` (prazo próximo/vencido).
 - **Cores das etapas** (badge/borda superior da coluna): Novo Lead `slate`, Contato Realizado `sky`, Proposta Enviada `indigo`, Negociação `amber`, Fechado Ganho `emerald`, Fechado Perdido `rose`.

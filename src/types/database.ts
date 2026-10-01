@@ -97,6 +97,57 @@ export type Database = {
           },
         ]
       }
+      api_keys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          key_hash: string
+          last_used_at: string | null
+          name: string
+          prefix: string
+          revoked_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_hash: string
+          last_used_at?: string | null
+          name: string
+          prefix: string
+          revoked_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          key_hash?: string
+          last_used_at?: string | null
+          name?: string
+          prefix?: string
+          revoked_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_keys_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deals: {
         Row: {
           created_at: string
@@ -505,6 +556,15 @@ export type Database = {
     }
     Functions: {
       accept_workspace_invite: { Args: { p_token: string }; Returns: string }
+      api_move_deal: {
+        Args: {
+          p_deal_id: string
+          p_index: number
+          p_stage: Database["public"]["Enums"]["deal_stage"]
+          p_workspace_id: string
+        }
+        Returns: undefined
+      }
       apply_pix_payment: {
         Args: {
           p_amount_cents: number
@@ -513,6 +573,23 @@ export type Database = {
           p_paid_by: string
           p_payment_intent_id: string
           p_session_id: string
+          p_workspace_id: string
+        }
+        Returns: string
+      }
+      authenticate_api_key: {
+        Args: { p_key_hash: string }
+        Returns: {
+          created_by: string
+          key_id: string
+          workspace_id: string
+        }[]
+      }
+      create_api_key: {
+        Args: {
+          p_key_hash: string
+          p_name: string
+          p_prefix: string
           p_workspace_id: string
         }
         Returns: string
@@ -601,6 +678,7 @@ export type Database = {
         Args: { p_plan: Database["public"]["Enums"]["workspace_plan"] }
         Returns: number
       }
+      revoke_api_key: { Args: { p_key_id: string }; Returns: undefined }
       search_normalize: { Args: { p_text: string }; Returns: string }
       shares_workspace_with: { Args: { p_user_id: string }; Returns: boolean }
     }

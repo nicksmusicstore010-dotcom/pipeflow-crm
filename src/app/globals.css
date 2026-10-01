@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 /* Design tokens (HSL triplets consumed by tailwind.config.ts as hsl(var(--x))).
-   Neutrals = Tailwind slate, primary = indigo-600 (light) / indigo-500 (dark). */
+   Neutrals = Tailwind slate, primary = indigo-600 (light) / indigo-400 (dark).
+   Dark mode: primary and destructive fills get dark text — a light fill with dark text is
+   the only way the same color passes WCAG AA both as a button and as link text (4.5:1). */
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -51,8 +53,8 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 47% 8%;
     --popover-foreground: 210 40% 98%;
-    --primary: 239 84% 67%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 234 89% 74%;
+    --primary-foreground: 222.2 84% 4.9%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
@@ -60,10 +62,10 @@
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
     --destructive: 350 89% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive-foreground: 222.2 84% 4.9%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 239 84% 67%;
+    --ring: 234 89% 74%;
 
     --chart-1: 239 84% 67%;
     --chart-2: 198 93% 60%;
@@ -73,8 +75,8 @@
 
     --sidebar: 222.2 47% 8%;
     --sidebar-foreground: 210 40% 90%;
-    --sidebar-primary: 239 84% 67%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 234 89% 74%;
+    --sidebar-primary-foreground: 222.2 84% 4.9%;
     --sidebar-accent: 217.2 32.6% 17.5%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 17.5%;
