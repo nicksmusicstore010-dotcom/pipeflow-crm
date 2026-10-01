@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 
 import type { Database } from "@/types/database";
 
-import { getSupabaseEnv } from "./env";
+import { getSupabaseEnv, SUPABASE_COOKIE_OPTIONS } from "./env";
 
 /**
  * Supabase client for Server Components, Server Actions and Route Handlers.
@@ -16,6 +16,7 @@ export async function createClient() {
   const { url, key } = getSupabaseEnv();
 
   return createServerClient<Database>(url, key, {
+    cookieOptions: SUPABASE_COOKIE_OPTIONS,
     cookies: {
       getAll() {
         return cookieStore.getAll();

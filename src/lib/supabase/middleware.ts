@@ -4,9 +4,9 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { safeNextPath } from "@/lib/safe-redirect";
 
-import { getSupabaseEnv } from "./env";
+import { getSupabaseEnv, SUPABASE_COOKIE_OPTIONS } from "./env";
 
-const PUBLIC_PATHS = ["/", "/pricing"];
+const PUBLIC_PATHS = ["/", "/pricing", "/forgot-password"];
 const AUTH_PATHS = ["/login", "/signup"];
 // Resolves to the last (or first) workspace, or to /onboarding.
 const AFTER_LOGIN_PATH = "/app";
@@ -30,6 +30,7 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(url, key, {
+    cookieOptions: SUPABASE_COOKIE_OPTIONS,
     cookies: {
       getAll() {
         return request.cookies.getAll();

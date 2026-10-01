@@ -359,7 +359,25 @@ Branch: `feat/deploy` → `main`. Produção: **https://pipeflow-crm-olive.verce
 - [x] Migration `20260930180000_security_audit.sql` aplicada no Supabase de produção (`db push`); isolamento 57/57; advisors só com os avisos esperados; `npm audit` 0
 - [x] `tsc`, lint e build de produção local sem erros
 - [x] **`pipeflow.vercel.app` não é deste projeto** (é um "Lovable App" de terceiros): o webhook do Stripe **nunca** deve apontar para lá. URL certa: `https://pipeflow-crm-olive.vercel.app/api/webhooks/stripe`, com os 7 eventos do `.env.example` (com só 3, cancelamento agendado, reativação e o Pix não chegam). O segredo de assinatura começa com `whsec_` (não existe `whsec_live_`)
+- [x] Merge `feat/deploy` → `main` (`20ea463`) e deploy de produção automático na Vercel. Sem PR: o `gh` não está logado nesta máquina
+- [x] **Fluxo completo em produção** (Playwright + Edge, usuário temporário apagado depois): 37/37 — landing → CTA → login (senha errada mantém o e-mail) → onboarding → dashboard → leads (criar, buscar, busca maliciosa) → detalhe + atividade (HTML exibido como texto) → pipeline (criar, mover pelo teclado, persiste) → dashboard com os números → configurações + convite (link com o domínio de produção) → cobrança; **banco conferido** (workspace Free, admin, e-mail minúsculo, `contacted`/posição 0/centavos, `author_id`, convite só com hash e 7 dias); celular 375 px sem rolagem lateral em 6 páginas; sair → login; sem erros de console nem 5xx. Webhook sem assinatura / assinatura falsa → 400
+- [x] Checkout → webhook → Pro testado **no build local com a sandbox** (produção sem Stripe): cartão 25/25, Pix 22/22
 - [ ] **Stripe na produção (você):** a Vercel de produção ainda não tem nenhuma variável do Stripe, então a cobrança mostra "pagamentos ainda não configurados". Ativar a conta Stripe → `npm run stripe:go-live` (cria produto/preço, portal, o webhook com os 7 eventos na URL certa, grava as envs na Vercel e republica) → pagar com cartão real e reembolsar. Chaves de teste na produção não: qualquer um viraria Pro com o cartão 4242
+
+---
+
+## Testes aprofundados pós-deploy (01/10/2026) ✅
+
+Caça a bugs e falhas depois do deploy: corridas no banco, CSRF, cookies, redirecionamentos, source maps, caminhos estranhos, fluxos de conta.
+
+- [x] **Workspace podia ficar sem nenhum admin** — `protect_last_admin` não travava nada: dois admins se rebaixando (ou cada um saindo) ao mesmo tempo passavam os dois. Reproduzido em produção: 3 de 30 tentativas. Migration `20261001120000_last_admin_lock.sql` trava a linha do workspace (como `enforce_member_limit`); testada em transação (último admin protegido, cascata ao excluir workspace ok) e aplicada: **0 de 80**
+- [x] **Não existia "Esqueci minha senha"** (quem esquecesse ficava trancado fora): `/forgot-password` (resposta igual exista ou não a conta; erros do link voltam para cá) → link → `/reset-password` (confirmação, "diferente da atual", **desconecta os outros aparelhos**). Teste 16/16: link inválido/reaproveitado recusado, senha antiga não entra mais, sessão do outro aparelho derrubada, anônimo → login
+- [x] **Cookies de sessão sem `Secure`** (token de acesso e de renovação podiam trafegar em HTTP num domínio sem HSTS) → `cookieOptions.secure` em produção nos dois clients do servidor
+- [x] Verificado sem mudança: Server Action com `Origin` de outro site recusada (e não loga), sem redirecionamento aberto em `/auth/callback` e `/login?next=` (4 variações), source maps não publicados (403), `/.env`, `/.git/config`, `../` e `%00` sem vazamento, convite inexistente → aviso, lista de membros enviada a não-admins só com nomes (sem e-mails)
+- [x] Regressão no build local: geral 68/68, cartão 25/25, Pix 22/22, ponta a ponta 37/37, isolamento 57/57
+- [ ] Supabase Auth → Email Templates → **Reset password**: trocar o link para `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=recovery` (funciona em qualquer navegador; o padrão só funciona no navegador que pediu — nesse caso o app já explica e oferece novo link)
+- [ ] Recomendado: Supabase Auth → "Secure password change" (exige login recente para trocar a senha) — pelo painel, não por `config push`
+- [ ] Recomendado: o webhook aceita qualquer assinatura ativa do customer como Pro, sem conferir o preço; se a conta Stripe vender outros produtos, filtrar por `STRIPE_PRO_PRICE_ID`
 
 ---
 

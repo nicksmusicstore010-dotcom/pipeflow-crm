@@ -37,7 +37,12 @@ export function LoginForm({
               <Input id="email" name="email" type="email" autoComplete="email" defaultValue={state.fields?.email} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="password">Senha</Label>
+                <Link href="/forgot-password" className="text-sm text-muted-foreground hover:text-primary hover:underline">
+                  Esqueceu a senha?
+                </Link>
+              </div>
               <Input
                 id="password"
                 name="password"
