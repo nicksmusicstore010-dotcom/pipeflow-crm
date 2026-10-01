@@ -29,3 +29,10 @@ export function getSupabaseSecretKey() {
 
   return key;
 }
+
+/**
+ * Session cookies (access + refresh token): HTTPS-only in production. The library
+ * default has no Secure flag; browsers accept Secure cookies on http://localhost,
+ * so `next start` locally still works (a LAN address over plain http won't).
+ */
+export const SUPABASE_COOKIE_OPTIONS = { secure: process.env.NODE_ENV === "production" };

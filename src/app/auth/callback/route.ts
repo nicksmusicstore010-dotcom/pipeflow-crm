@@ -1,7 +1,7 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { safeNextPath } from "@/lib/safe-redirect";
+import { RESET_PASSWORD_PATH, safeNextPath } from "@/lib/safe-redirect";
 import { createClient } from "@/lib/supabase/server";
 
 const EMAIL_OTP_TYPES: EmailOtpType[] = ["signup", "email", "invite", "magiclink", "recovery", "email_change"];
@@ -23,7 +23,9 @@ export async function GET(request: NextRequest) {
   const next = safeNextPath(searchParams.get("next"));
   const supabase = await createClient();
 
-  const fail = (reason: string) => NextResponse.redirect(`${origin}/login?error=${reason}`);
+  // A failed password-reset link goes back to where a new one can be requested.
+  const failPage = next === RESET_PASSWORD_PATH ? "/forgot-password" : "/login";
+  const fail = (reason: string) => NextResponse.redirect(`${origin}${failPage}?error=${reason}`);
 
   if (tokenHash && type && EMAIL_OTP_TYPES.includes(type)) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });

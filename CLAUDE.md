@@ -38,7 +38,7 @@ npx supabase gen types typescript --linked > src/types/database.ts  # regenerar 
 src/
   app/
     (marketing)/            # landing page pública (/, /pricing)
-    (auth)/                 # login, signup, callback, aceitar convite
+    (auth)/                 # login, signup, forgot-password / reset-password, aceitar convite
     (app)/
       [workspaceSlug]/      # tudo que é do workspace fica sob o slug
         dashboard/
@@ -129,13 +129,15 @@ Etapas do pipeline (`deal_stage`, nesta ordem): `new_lead` → `contacted` → `
 - **Qualquer usuário logado pode chamar a API do Supabase direto** (chave publicável + JWT dele), sem passar pelas Server Actions. Toda regra de negócio que importa (limites de plano, quem pode editar, colunas imutáveis) precisa valer no banco: RLS, grants por coluna, triggers e RPCs.
 - Rate limits no banco via `private.hit_rate_limit(ação, máx, janela)` (schema `private`, fora da API): convites 20/hora e workspaces 10/dia por usuário (nas RPCs) e 300 inserções/hora de negócios e de atividades (trigger `rate_limit_insert`; service role não conta) — o banco levanta `rate_limited` (`RATE_LIMITED` em `lib/action-result.ts`). Slugs reservados (`RESERVED_SLUGS` em `lib/workspace-slug.ts`) também são recusados pelo banco: mantenha as duas listas iguais.
 - Cabeçalhos de segurança e CSP em `next.config.mjs`. O navegador só fala com o próprio app (`connect-src 'self'`; Supabase e Stripe são chamados do servidor): script, fonte ou API externa no cliente exige atualizar a CSP.
+- Cookies de sessão com `Secure` em produção (`SUPABASE_COOKIE_OPTIONS` em `lib/supabase/env.ts`, usado pelos dois clients do servidor): por isso o build de produção só loga via HTTPS ou `localhost`, não por IP da rede em http.
+- Recuperação de senha: `/forgot-password` → e-mail com link para `/auth/callback?next=/reset-password` (erros do link voltam para `/forgot-password`) → `/reset-password` grava a nova senha e desconecta os outros aparelhos. Resposta igual exista ou não a conta.
 - Supabase fora do ar ≠ deslogado: `getCurrentUser()` lança erro (tela "Tentar novamente") e o proxy não redireciona para `/login` quando o Auth não responde. Depois de uma action que falhou por rede (`NETWORK_ERROR`), nunca chame `router.refresh()` — offline ele vira navegação completa para a página de erro do navegador.
 
 ### Permissões e planos
 - **Admin**: tudo, incluindo membros, convites, billing e configurações do workspace.
 - **Membro**: CRUD de leads, negócios e atividades. Sem acesso a settings/billing.
 - Limites do plano Free (2 colaboradores, 50 leads) são checados **no servidor** antes de inserir, lendo de `lib/plans.ts`. Na UI, mostrar o limite e um CTA de upgrade. O banco também barra os dois (triggers `enforce_member_limit` — convites abertos contam como vaga — e `enforce_lead_limit`, erro `plan_limit`) — mudar um limite exige migration (`plan_member_limit()` / `plan_lead_limit()`).
-- Um workspace sempre tem pelo menos um admin (trigger `protect_last_admin`). Remover um membro deixa os leads/negócios dele sem responsável.
+- Um workspace sempre tem pelo menos um admin (trigger `protect_last_admin`, que trava a linha do workspace — sem a trava, dois admins se rebaixando ao mesmo tempo deixavam o workspace sem admin). Remover um membro deixa os leads/negócios dele sem responsável.
 - O plano do workspace só muda via webhook do Stripe (verificando a assinatura do evento) — nunca a partir do client.
 - **Duas formas de pagar o Pro:** cartão = assinatura mensal (Checkout `mode=subscription`); **Pix = pré-pago** de 1, 3, 6 ou 12 meses (Checkout `mode=payment`, `metadata.kind = "pix_pro"`), porque conta Stripe do Brasil não tem Pix recorrente (Pix Automático). O Pix é assíncrono: o Pro entra em `checkout.session.completed` (se já veio pago) ou `checkout.session.async_payment_succeeded`. O workspace é Pro enquanto houver assinatura viva **ou** `pro_until` no futuro; o `pg_cron` (`expire-prepaid-pro`, a cada 15 min) rebaixa quem venceu sem cartão. Pix e cartão não se sobrepõem (cada checkout recusa se o outro estiver valendo). Reembolso de Pix pelo painel do Stripe **não** tira o Pro automaticamente.
 - Testar Pix no modo de teste: CPF `000.000.000-00`; o e-mail define o resultado (`...succeed_immediately@...` paga na hora; e-mail comum paga em ~3 min; `...expire_immediately@...` expira).

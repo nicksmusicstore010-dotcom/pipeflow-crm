@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { safeNextPath } from "@/lib/safe-redirect";
+import { RESET_PASSWORD_PATH, safeNextPath } from "@/lib/safe-redirect";
 import { siteOrigin } from "@/lib/site-url";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,6 +17,12 @@ export type AuthFormState = {
 // Trimmed and lowercased: a stray space from autofill or the phone keyboard isn't a typo.
 const emailField = z.string().trim().toLowerCase().pipe(z.email("Informe um e-mail válido."));
 
+// Supabase (bcrypt) rejects passwords longer than 72 characters.
+const passwordField = z
+  .string()
+  .min(8, "A senha precisa ter pelo menos 8 caracteres.")
+  .max(72, "A senha pode ter no máximo 72 caracteres.");
+
 const loginSchema = z.object({
   email: emailField,
   password: z.string().min(1, "Informe sua senha."),
@@ -25,16 +31,16 @@ const loginSchema = z.object({
 const signupSchema = z.object({
   fullName: z.string().trim().min(2, "Informe seu nome.").max(100, "Use no máximo 100 caracteres no nome."),
   email: emailField,
-  // Supabase (bcrypt) rejects passwords longer than 72 characters.
-  password: z
-    .string()
-    .min(8, "A senha precisa ter pelo menos 8 caracteres.")
-    .max(72, "A senha pode ter no máximo 72 caracteres."),
+  password: passwordField,
 });
 
 const resendSchema = z.object({
   email: emailField,
 });
+
+const newPasswordSchema = z
+  .object({ password: passwordField, confirmPassword: z.string() })
+  .refine((v) => v.password === v.confirmPassword, { message: "As senhas não conferem.", path: ["confirmPassword"] });
 
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   invalid_credentials: "E-mail ou senha incorretos.",
@@ -44,6 +50,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   weak_password: "Senha muito fraca. Use pelo menos 8 caracteres.",
   over_email_send_rate_limit: "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
   over_request_rate_limit: "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+  same_password: "A nova senha precisa ser diferente da atual.",
 };
 
 function translateAuthError(code: string | undefined) {
@@ -126,6 +133,46 @@ export async function resendConfirmation(
     success:
       "Se houver uma conta aguardando confirmação com este e-mail, enviamos um novo link. Confira também o spam.",
   };
+}
+
+/** "Esqueci minha senha": e-mails a link that signs in and opens /reset-password. */
+export async function requestPasswordReset(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const parsed = resendSchema.safeParse({ email: formData.get("email") });
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${await siteOrigin()}/auth/callback?next=${encodeURIComponent(RESET_PASSWORD_PATH)}`,
+  });
+  // Only the rate limits are worth telling apart; anything else gets the same answer below.
+  if (error && /rate_limit/.test(error.code ?? "")) return { error: translateAuthError(error.code) };
+  if (error) console.error("[auth] password reset e-mail failed:", error.code ?? error.message);
+
+  // Same answer whether or not the account exists, so this can't be used to probe e-mails.
+  return {
+    success:
+      "Se houver uma conta com este e-mail, enviamos um link para criar uma nova senha. Ele vale por 1 hora — confira também o spam.",
+  };
+}
+
+/** New password, set from the session the reset link opened. Other devices are signed out. */
+export async function updatePassword(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const parsed = newPasswordSchema.safeParse({
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+  if (!parsed.success) return { error: firstIssue(parsed.error) };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error?.code === "session_not_found" || error?.name === "AuthSessionMissingError") {
+    return { error: "O link expirou. Peça um novo link para criar a senha." };
+  }
+  if (error) return { error: translateAuthError(error.code) };
+
+  // Whoever had the old password (another browser, a stolen session) is logged out.
+  await supabase.auth.signOut({ scope: "others" });
+  redirect("/app");
 }
 
 /** `next` (optional form field): where to log in again, e.g. back to an invite. */
