@@ -24,3 +24,5 @@ export type ActivityUpdate = TablesUpdate<"activities">;
 export type WorkspaceRole = Enums<"workspace_role">;
 export type WorkspacePlan = Enums<"workspace_plan">;
 export type SubscriptionStatus = Enums<"subscription_status">;
+
+export type ApiKey = Omit<Tables<"api_keys">, "key_hash">;

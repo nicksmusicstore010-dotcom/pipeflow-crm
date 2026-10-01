@@ -16,7 +16,7 @@ export function CreateWorkspaceForm({ isFirst }: { isFirst: boolean }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">{isFirst ? "Crie seu workspace" : "Novo workspace"}</CardTitle>
+        <CardTitle className="text-xl" role="heading" aria-level={1}>{isFirst ? "Crie seu workspace" : "Novo workspace"}</CardTitle>
         <CardDescription>
           Um workspace reúne os leads, negócios e o time de uma empresa ou cliente.
         </CardDescription>

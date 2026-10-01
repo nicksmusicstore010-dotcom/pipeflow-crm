@@ -17,7 +17,7 @@ function Notice({ title, description, user }: { title: string; description: stri
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">{title}</CardTitle>
+        <CardTitle className="text-xl" role="heading" aria-level={1}>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardFooter>
@@ -74,7 +74,7 @@ export default async function InvitePage(props: { params: Promise<{ token: strin
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Convite para {preview.workspaceName}</CardTitle>
+        <CardTitle className="text-xl" role="heading" aria-level={1}>Convite para {preview.workspaceName}</CardTitle>
         <CardDescription>
           {inviter} convidou <strong className="font-medium text-foreground">{preview.email}</strong> para participar
           do workspace como {role}.

@@ -14,7 +14,7 @@ export function ResetPasswordForm({ email }: { email: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Criar nova senha</CardTitle>
+        <CardTitle className="text-xl" role="heading" aria-level={1}>Criar nova senha</CardTitle>
         <CardDescription>
           Para a conta <span className="font-medium text-foreground">{email}</span>. Os outros aparelhos conectados
           serão desconectados.

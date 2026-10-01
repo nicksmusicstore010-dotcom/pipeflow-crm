@@ -16,7 +16,7 @@ export function ForgotPasswordForm({ initialState = {} }: { initialState?: AuthF
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">Esqueceu a senha?</CardTitle>
+        <CardTitle className="text-xl" role="heading" aria-level={1}>Esqueceu a senha?</CardTitle>
         <CardDescription>Informe seu e-mail e enviaremos um link para criar uma nova senha.</CardDescription>
       </CardHeader>
       <form action={formAction}>

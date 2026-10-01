@@ -43,7 +43,7 @@ export function HeroPreview() {
                       <p
                         className={cn(
                           "mt-1.5 flex items-center gap-1 text-[11px] font-medium",
-                          deal.late ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400",
+                          deal.late ? "text-rose-700 dark:text-rose-400" : "text-amber-700 dark:text-amber-400",
                         )}
                       >
                         <CalendarClock className="h-3 w-3" />

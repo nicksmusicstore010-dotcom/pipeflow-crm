@@ -17,7 +17,6 @@ function isPublic(pathname: string) {
     AUTH_PATHS.includes(pathname) ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/invite/") ||
-    pathname.startsWith("/api/webhooks/") ||
     // Link previews (WhatsApp, LinkedIn...) fetch it without a session.
     pathname.startsWith("/opengraph-image")
   );
@@ -28,6 +27,9 @@ function isPublic(pathname: string) {
  * anonymous users are sent to /login, logged-in users skip /login and /signup.
  */
 export async function updateSession(request: NextRequest) {
+  // Webhooks (Stripe signature) and the public API (API key) never use the session.
+  if (request.nextUrl.pathname.startsWith("/api/")) return NextResponse.next({ request });
+
   const { url, key } = getSupabaseEnv();
   let response = NextResponse.next({ request });
 
