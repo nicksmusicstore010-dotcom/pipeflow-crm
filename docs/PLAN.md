@@ -52,7 +52,7 @@ Branch: `feat/m1-fundacao` · commit inicial `826bc99`
 
 **Confirmação de e-mail (24/09/2026):**
 - [x] Correção: confirmação de e-mail falhava ("Link inválido") quando o link era aberto em outro navegador/dispositivo (PKCE). `/auth/callback` agora aceita `token_hash` (`verifyOtp`, funciona em qualquer navegador) além de `code`; mensagens distintas para link expirado/usado e "confirmado em outro navegador"; botão "Reenviar link de confirmação" no login. Testado com Playwright (usuários temporários, sem envio real de e-mail)
-- [ ] Dashboard do Supabase: template "Confirm signup" apontando para `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email` (fazer depois do deploy da correção)
+- [ ] Dashboard do Supabase: template "Confirm signup" apontando para `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email` (`&`: desde 01/10/2026 o app sempre manda `?next=` no `RedirectTo`)
 - [ ] SMTP próprio (Resend) no Supabase — o SMTP padrão é só para testes: poucos e-mails por hora e entrega lenta/incerta
 
 **Infra:**

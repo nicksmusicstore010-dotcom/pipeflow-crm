@@ -11,7 +11,8 @@ const EMAIL_OTP_TYPES: EmailOtpType[] = ["signup", "email", "invite", "magiclink
  *
  * - `?token_hash=…&type=…` (preferred): verified server-side, so it works in any browser or
  *   device — e.g. the link opened from the Gmail app on the phone. Needs the e-mail template
- *   to link to `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email`.
+ *   to link to `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email` (RedirectTo always
+ *   carries `?next=`, see actions/auth.ts).
  * - `?code=…` (Supabase default template, PKCE): only works in the browser that started the
  *   signup, because the code verifier lives in a cookie there.
  */
