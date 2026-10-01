@@ -17,6 +17,8 @@ Roteiro de construção em milestones, derivado do [PRD](PRD.md). Cada milestone
 | 9 | Landing page | ✅ |
 | 10 | API pública, onboarding e polimento | ✅ |
 
+**🚀 Lançado em 01/10/2026** — https://pipeflow-crm-olive.vercel.app (commit `d37694e`), projeto dado como concluído. Fica para depois do lançamento: cobrança live do Stripe (`npm run stripe:go-live`), troca da chave do Resend, ajustes do Supabase Auth no painel (templates, senha mínima 8, secure password change), domínio próprio e CSP com nonce — detalhes nas seções abaixo.
+
 **Verificação padrão de todo milestone:** `npx tsc --noEmit`, `npm run lint` e `npm run build` sem erros, mais o teste manual descrito em "Pronto quando".
 
 ---
@@ -352,7 +354,7 @@ Branch: `feat/deploy`. Build de produção + Playwright/Edge com usuário de tes
 
 ---
 
-## Deploy em produção (aula 5.3, 01/10/2026) 🚧
+## Deploy em produção (aula 5.3, 01/10/2026) ✅
 
 Branch: `feat/deploy` → `main`. Produção: **https://pipeflow-crm-olive.vercel.app** (projeto Vercel `pipeflow-crm`).
 
